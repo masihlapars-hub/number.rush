@@ -3,146 +3,150 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Number Rush — Sky Glass SHOWTIME</title>
+<title>Number Rush — NEON STORM</title>
+<meta http-equiv="Cache-Control" content="no-store, max-age=0"/>
 <style>
   :root{
-    --bg1:#c9e7ff; --bg2:#ffd7f2; --bg3:#fff5d6;
-    --ink:#0f172a; --muted:#475569; --line:rgba(255,255,255,.35);
-    --primary:#7c3aed; --primary2:#a78bfa; --ok:#22c55e; --err:#ef4444;
+    --ink:#0f172a; --muted:#334155; --line:rgba(255,255,255,.35);
+    --p1:#8b5cf6; --p2:#a78bfa; --ok:#22c55e; --err:#ef4444;
   }
   *{box-sizing:border-box}
   html,body{height:100%}
   body{
     margin:0; color:var(--ink);
     font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,"Helvetica Neue",Arial;
-    background:
-      radial-gradient(1200px 520px at 80% -10%, var(--bg3), transparent 60%),
-      radial-gradient(1000px 640px at -10% 30%, var(--bg2), transparent 60%),
-      linear-gradient(180deg, var(--bg1), #b7d7ff 60%, #a8d0ff);
+    /* dasar langit */
+    background: linear-gradient(180deg,#bde0ff 0%,#a8d0ff 60%,#9bc8ff 100%);
     min-height:100svh;
     padding:max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right))
             max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
     overflow:auto;
   }
 
-  /* ===== BACKGROUND: OVERKILL & TERLIHAT ===== */
+  /* ================= SUPER BACKGROUND (sangat terlihat) ================= */
   .bg{position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden}
-  /* aurora gelombang */
-  .aurora{
-    position:absolute; inset:-20% -20% auto -20%; height:70%;
-    background:
-      radial-gradient(60% 140% at 20% 60%, #a78bfa55 0%, transparent 60%),
-      radial-gradient(60% 140% at 60% 40%, #22c55e44 0%, transparent 60%),
-      radial-gradient(60% 140% at 90% 70%, #60a5fa44 0%, transparent 60%);
+  /* diagonal neon strip bergerak */
+  .neon{
+    position:absolute; inset:-20%;
+    background: repeating-linear-gradient(
+      120deg,
+      rgba(255,255,255,.06) 0 40px,
+      rgba(255,255,255,0) 40px 80px
+    ), linear-gradient(120deg,#ff80bf55,#80ffea55,#a78bfa55,#ffdd7a55);
+    background-size: 100% 100%, 400% 400%;
+    animation: neonShift 14s linear infinite;
     mix-blend-mode: screen;
-    animation: auroraMove 16s linear infinite;
   }
-  @keyframes auroraMove{ 0%{transform:translateY(0) rotate(0)} 50%{transform:translateY(-6%) rotate(3deg)} 100%{transform:translateY(0) rotate(0)} }
+  @keyframes neonShift{ to{ background-position: 0 0, 400% 400%; } }
 
-  /* gradient berputar halus */
-  .halo{
-    position:absolute; inset:-30%; background:
-      conic-gradient(from 0deg, #ffffff00 0 20deg, #ffffff22 120deg, #ffffff00 160deg, #ffffff22 240deg, #ffffff00 280deg);
-    filter:blur(20px); animation: spin 20s linear infinite;
+  /* aurora neon tebal */
+  .aurora{
+    position:absolute; inset:-10% -10% auto -10%; height:75%;
+    background:
+      radial-gradient(60% 140% at 15% 65%, #a78bfaaa 0%, transparent 60%),
+      radial-gradient(60% 140% at 55% 35%, #22c55eaa 0%, transparent 60%),
+      radial-gradient(60% 140% at 90% 75%, #60a5faaa 0%, transparent 60%);
+    animation: auroraMove 12s ease-in-out infinite;
+    mix-blend-mode: screen;
   }
-  @keyframes spin{ to{ transform:rotate(360deg)} }
+  @keyframes auroraMove{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-6%) rotate(4deg)}}
 
-  .sun{position:absolute; right:4vw; top:4vh; width:110px; height:110px; border-radius:50%;
-       background:#ffd166; box-shadow:0 0 60px #ffd166aa, inset -14px -16px 0 #ffc43d; animation:pulse 4s ease-in-out infinite}
-  @keyframes pulse{0%,100%{transform:scale(1)} 50%{transform:scale(1.06)}}
+  .sun{position:absolute; right:4vw; top:4vh; width:120px; height:120px; border-radius:50%;
+       background:#ffd166; box-shadow:0 0 70px #ffd166cc, inset -16px -18px 0 #ffc43d; animation:pulse 4s ease-in-out infinite}
+  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
 
   .layer{position:absolute; inset:0}
-  .cloud{position:absolute; background:#fff; border-radius:60px; filter:drop-shadow(0 10px 24px rgba(0,0,0,.16))}
+  .cloud{position:absolute; background:#fff; border-radius:60px; filter:drop-shadow(0 12px 28px rgba(0,0,0,.2))}
   .cloud:before,.cloud:after{content:""; position:absolute; background:#fff; border-radius:80px}
   .cloud:before{width:70%; height:70%; left:-25%; top:10%}
   .cloud:after{width:55%; height:55%; right:-20%; top:20%}
-  @keyframes driftRight{from{transform:translateX(-140%)} to{transform:translateX(140%)}}
-  @keyframes driftLeft {from{transform:translateX(130%)} to{transform:translateX(-130%)}}
-  .l1 .cloud{animation:driftRight var(--t,58s) linear infinite; opacity:.95}
-  .l2 .cloud{animation:driftLeft  var(--t,36s) linear infinite; opacity:.85}
-  .l3 .cloud{animation:driftRight var(--t,80s) linear infinite; opacity:.75; filter:drop-shadow(0 14px 30px rgba(0,0,0,.18))}
+  @keyframes driftRight{from{transform:translateX(-150%)} to{transform:translateX(150%)}}
+  @keyframes driftLeft {from{transform:translateX(140%)} to{transform:translateX(-140%)}}
+  .back .cloud{animation:driftRight var(--t,90s) linear infinite; opacity:.85}
+  .mid  .cloud{animation:driftLeft  var(--t,48s) linear infinite; opacity:.9}
+  .front.cloud{animation:driftRight var(--t,34s) linear infinite; opacity:.95}
 
-  /* balon parade melintas */
+  /* balon parade kontinu */
   .balloon{
-    position:absolute; width:52px; height:68px; border-radius:50% 50% 45% 45%/60% 60% 40% 40%;
-    background:radial-gradient(70% 90% at 35% 20%, #fff6, transparent), var(--col,#ff7ab6);
-    box-shadow:0 12px 24px rgba(0,0,0,.22);
-    animation: float 5.5s ease-in-out infinite, parade 22s linear infinite;
+    position:absolute; width:58px; height:76px; border-radius:50% 50% 45% 45%/60% 60% 40% 40%;
+    background:radial-gradient(70% 90% at 35% 20%, #fff8, transparent), var(--col,#ff7ab6);
+    box-shadow:0 12px 26px rgba(0,0,0,.28);
+    animation: float 5.5s ease-in-out infinite, parade 18s linear infinite;
   }
-  @keyframes float{0%,100%{transform:translateY(0)} 50%{transform:translateY(-20px)}}
-  @keyframes parade{ from{ left:-15vw } to{ left:115vw } }
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-22px)}}
+  @keyframes parade{from{left:-20vw} to{left:120vw}}
   .balloon:after{content:""; position:absolute; left:50%; bottom:-12px; width:2px; height:28px; background:#6b7280; transform:translateX(-50%)}
 
-  .star{position:absolute; width:5px; height:5px; background:#fff; border-radius:50%; box-shadow:0 0 10px #fff}
-  @keyframes twinkle{0%,100%{opacity:.2; transform:scale(.6)} 50%{opacity:1; transform:scale(1)}}
+  .star{position:absolute; width:6px; height:6px; background:#fff; border-radius:50%; box-shadow:0 0 12px 3px #fff}
+  @keyframes twinkle{0%,100%{opacity:.2; transform:scale(.6)}50%{opacity:1; transform:scale(1)}}
 
-  /* wind streaks sering */
-  .wind{position:absolute; top:0; width:160px; height:2px; background:linear-gradient(90deg,transparent,#ffffffdd,transparent);
-        filter:blur(.2px); opacity:.9; animation:blow var(--tw,4.2s) linear forwards}
+  /* wind & sparkles sangat sering */
+  .wind{position:absolute; top:0; width:180px; height:3px; background:linear-gradient(90deg,transparent,#ffffffee,transparent);
+        filter:blur(.2px); opacity:.95; animation:blow var(--tw,3.2s) linear forwards}
   @keyframes blow{from{transform:translate(-20vw, var(--y))} to{transform:translate(120vw, var(--y))}}
+  .sparkle{position:absolute; width:8px; height:8px; border-radius:50%; background:#fff; box-shadow:0 0 12px 4px #fff; animation:sparkle 1.2s ease-in-out forwards}
+  @keyframes sparkle{0%{opacity:0; transform:scale(.6)}40%{opacity:1; transform:scale(1)}100%{opacity:0; transform:scale(.4)}}
 
-  /* sparkles */
-  .sparkle{position:absolute; width:6px; height:6px; border-radius:50%; background:#fff; box-shadow:0 0 10px 3px #fff;
-           animation: sparkle 1.4s ease-in-out forwards}
-  @keyframes sparkle{0%{opacity:0; transform:scale(.6)} 40%{opacity:1; transform:scale(1)} 100%{opacity:0; transform:scale(.4)}}
-
-  /* ===== GLASS UI ===== */
+  /* ================= GLASS UI ================= */
   .wrap{position:relative; z-index:1; display:grid; place-items:center; min-height:calc(100svh - 24px)}
   .card{
     width:min(1120px,100%);
-    background:rgba(255,255,255,.28);       /* lebih transparan */
-    backdrop-filter: blur(10px) saturate(160%);
+    background:rgba(255,255,255,.22);
+    backdrop-filter: blur(12px) saturate(170%);
     border:1px solid var(--line);
-    border-radius:18px;
-    box-shadow:0 18px 46px rgba(15,23,42,.22);
+    border-radius:18px; box-shadow:0 18px 46px rgba(15,23,42,.25);
     overflow:hidden;
   }
   header{display:flex; gap:12px; align-items:center; padding:14px 16px; border-bottom:1px solid var(--line);
-         background:linear-gradient(180deg, rgba(255,255,255,.38), rgba(255,255,255,.22))}
+         background:linear-gradient(180deg, rgba(255,255,255,.34), rgba(255,255,255,.18))}
   .logo{width:30px; height:30px; display:grid; place-items:center; border-radius:10px; color:#fff; font-weight:800;
-        background:conic-gradient(from 120deg, var(--primary), var(--primary2))}
+        background:conic-gradient(from 120deg, var(--p1), var(--p2))}
   header h1{font-size:18px; margin:0}
-  .sub{font-size:12px; color:#334155}
+  .sub{font-size:12px; color:#1f2937}
   .content{display:grid; gap:14px; padding:14px}
   @media (min-width:980px){ .content{ grid-template-columns: 1.15fr .85fr; } }
-  .panel{background:rgba(255,255,255,.24); border:1px solid var(--line); border-radius:16px; padding:14px; backdrop-filter: blur(10px)}
+  .panel{background:rgba(255,255,255,.18); border:1px solid var(--line); border-radius:16px; padding:14px; backdrop-filter: blur(10px)}
   .hud{display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between; margin-bottom:10px}
   .stats{display:flex; gap:10px; flex-wrap:wrap}
   .chip{background:rgba(255,255,255,.55); border:1px solid var(--line); padding:8px 10px; border-radius:999px; font-size:13px; display:flex; gap:8px; align-items:center}
   .chip b{font-variant-numeric:tabular-nums}
   .chip.warn{box-shadow:0 0 0 3px #fecacaaa}
-  select{border:1px solid var(--line); background:rgba(255,255,255,.9); padding:8px 10px; border-radius:10px; font-weight:600}
-  .btn{appearance:none; border:0; background:linear-gradient(180deg, var(--primary), var(--primary2)); color:#fff; padding:10px 14px; border-radius:12px; font-weight:700; cursor:pointer; box-shadow:0 12px 26px rgba(124,58,237,.35)}
+  select{border:1px solid var(--line); background:rgba(255,255,255,.95); padding:8px 10px; border-radius:10px; font-weight:700}
+  .btn{appearance:none; border:0; background:linear-gradient(180deg, var(--p1), var(--p2)); color:#fff; padding:10px 14px; border-radius:12px; font-weight:800; cursor:pointer; box-shadow:0 12px 28px rgba(124,58,237,.5)}
   .btn:active{transform:translateY(1px) scale(.99)}
   .toggle{appearance:none; border:1px solid var(--line); background:rgba(255,255,255,.5); padding:8px 10px; border-radius:10px; font-weight:700; cursor:pointer}
 
-  /* BOARD benar2 transparan (sel tetap solid) + efek glow bernafas */
+  /* Board ekstra transparan + border glow berdenyut */
   .board-wrap{display:grid; place-items:center}
   .board{
     width:100%; max-width:100%;
     block-size:min(72svh, 76vw); aspect-ratio:1/1;
     background: transparent;
-    border:1px solid rgba(255,255,255,.4);
     border-radius:14px; display:grid; gap:8px; padding:10px; overflow:hidden;
-    box-shadow: inset 0 0 0 1px rgba(255,255,255,.18), 0 12px 26px rgba(0,0,0,.08);
-    animation:boardGlow 6s ease-in-out infinite;
+    border:1px solid rgba(255,255,255,.45);
+    box-shadow: inset 0 0 0 2px rgba(255,255,255,.18), 0 18px 36px rgba(0,0,0,.14);
+    animation: boardGlow 3.5s ease-in-out infinite;
   }
-  @keyframes boardGlow{0%,100%{box-shadow: inset 0 0 0 1px rgba(255,255,255,.18), 0 12px 26px rgba(0,0,0,.08)} 50%{box-shadow: inset 0 0 0 1px rgba(255,255,255,.38), 0 18px 36px rgba(0,0,0,.12)}}
+  @keyframes boardGlow{
+    0%,100%{box-shadow: inset 0 0 0 2px rgba(255,255,255,.18), 0 18px 36px rgba(0,0,0,.14)}
+    50%{box-shadow: inset 0 0 0 2px rgba(255,255,255,.5), 0 26px 60px rgba(0,0,0,.22)}
+  }
   .cell{
-    display:grid; place-items:center; background:#fff; border:1px solid #e5e7eb; border-radius:12px; font-weight:800;
-    font-size: clamp(16px, 3.6cqi, 28px); user-select:none; cursor:pointer; transition:transform .08s ease, box-shadow .12s ease, background .12s ease;
-    box-shadow:0 6px 14px rgba(15,23,42,.1)
+    display:grid; place-items:center; background:#fff; border:1px solid #e5e7eb; border-radius:12px; font-weight:900;
+    font-size: clamp(16px, 3.6cqi, 28px); user-select:none; cursor:pointer;
+    transition: transform .08s ease, box-shadow .12s ease, background .12s ease;
+    box-shadow:0 8px 16px rgba(15,23,42,.14)
   }
-  .cell:hover{ box-shadow:0 12px 20px rgba(15,23,42,.14) }
+  .cell:hover{ box-shadow:0 14px 24px rgba(15,23,42,.2) }
   .cell.correct{ background:#ecfdf5; border-color:#bbf7d0 }
   .cell.wrong{ background:#fef2f2; border-color:#fecaca }
   .shake{ animation:shake .28s linear }
-  @keyframes shake{0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)}}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 
   .title{font-weight:800; margin:0 0 6px}
-  .sidebar p{margin:6px 0; color:#334155; font-size:14px}
+  .sidebar p{margin:6px 0; color:#1f2937; font-size:14px}
   .list{display:grid; gap:8px}
-  .row{display:flex; justify-content:space-between; align-items:center; padding:8px 10px; border:1px dashed var(--line); border-radius:10px; background:rgba(255,255,255,.28)}
+  .row{display:flex; justify-content:space-between; align-items:center; padding:8px 10px; border:1px dashed var(--line); border-radius:10px; background:rgba(255,255,255,.25)}
   .tag{font-size:12px; padding:4px 8px; border-radius:999px; background:#eef2ff; color:#4338ca; border:1px solid #e0e7ff}
 
   .toast{position:fixed; left:50%; bottom:18px; transform:translateX(-50%) translateY(60px); opacity:0; background:#111827; color:#fff; padding:10px 14px; border-radius:12px; box-shadow:0 10px 24px rgba(0,0,0,.2); z-index:3; transition: transform .25s ease, opacity .25s ease; font-size:14px}
@@ -152,14 +156,14 @@
 </style>
 </head>
 <body>
-  <!-- BACKGROUND LAYERS -->
+  <!-- BACKGROUND -->
   <div class="bg" aria-hidden="true">
-    <div class="halo"></div>
+    <div class="neon"></div>
     <div class="aurora"></div>
     <div class="sun"></div>
-    <div class="layer l3" id="l3"></div>
-    <div class="layer l1" id="l1"></div>
-    <div class="layer l2" id="l2"></div>
+    <div class="layer back" id="lBack"></div>
+    <div class="layer mid"  id="lMid"></div>
+    <div class="layer"      id="lFront"></div>
   </div>
 
   <div class="wrap">
@@ -167,8 +171,8 @@
       <header>
         <div class="logo">NR</div>
         <div>
-          <h1>Number Rush — Sky Glass <span class="tag" style="font-size:11px; padding:3px 6px; margin-left:6px; background:#ecfeff; color:#0369a1; border:1px solid #a5f3fc; border-radius:999px;">SHOWTIME</span></h1>
-          <div class="sub">Transparan, animasi **ditonjolkan** (aurora, parallax cloud, balon parade, wind, sparkles).</div>
+          <h1>Number Rush — <b>NEON STORM</b></h1>
+          <div class="sub">Transparan total + animasi ditonjolkan (neon strip, aurora, 3 lapis awan, balon parade, wind & sparkles).</div>
         </div>
       </header>
 
@@ -179,11 +183,11 @@
             <div class="stats">
               <div class="chip">Level:
                 <select id="level">
-                  <option value="1">1 • Cloudy Start (1–20) • 25s</option>
-                  <option value="2">2 • Starry Night (1–30) • 35s</option>
-                  <option value="3">3 • Rainbow Ride (1–40) • 45s</option>
-                  <option value="4">4 • Balloon Festival (1–50) • 55s</option>
-                  <option value="5">5 • Final Sky (1–60) • 65s</option>
+                  <option value="1">1 • 1–20 • 25s</option>
+                  <option value="2">2 • 1–30 • 35s</option>
+                  <option value="3">3 • 1–40 • 45s</option>
+                  <option value="4">4 • 1–50 • 55s</option>
+                  <option value="5">5 • 1–60 • 65s</option>
                 </select>
               </div>
               <div class="chip">Target: <b id="target">1</b></div>
@@ -211,7 +215,6 @@
             <div class="row"><span>Salah</span><span class="tag">-2s & shake</span></div>
             <div class="row"><span>Chaos Mode</span><span class="tag">grid goyang & angka geser</span></div>
           </div>
-          <p style="margin-top:10px">Animasi jalan **nonstop** di belakang. Panel transparan sengaja biar animasi nongol jelas.</p>
         </aside>
       </div>
     </div>
@@ -229,69 +232,70 @@
         chipTime=$('#chipTime'), board=$('#board'), btn=$('#btnStart'),
         toast=$('#toast'), comboEl=$('#combo'), chaosBtn=$('#toggleChaos');
 
-  const L1=$('#l1'), L2=$('#l2'), L3=$('#l3');
+  const LBack=$('#lBack'), LMid=$('#lMid'), LFront=$('#lFront');
 
   const levels={
-    1:{max:20, cols:5, rows:4, theme:'day',     time:25},
-    2:{max:30, cols:6, rows:5, theme:'night',   time:35},
-    3:{max:40, cols:7, rows:6, theme:'rainbow', time:45},
-    4:{max:50, cols:8, rows:7, theme:'balloon', time:55},
-    5:{max:60, cols:8, rows:8, theme:'final',   time:65}
+    1:{max:20, cols:5, rows:4, time:25},
+    2:{max:30, cols:6, rows:5, time:35},
+    3:{max:40, cols:7, rows:6, time:45},
+    4:{max:50, cols:8, rows:7, time:55},
+    5:{max:60, cols:8, rows:8, time:65}
   };
 
   let seq=1, maxN=20, started=false, deadline=0, ticker=null, remaining=0;
   let lastHit=0, combo=0, chaos=false, chaosTimer=null;
   const audioCtx='AudioContext' in window ? new AudioContext() : null;
 
-  /* ===== BACKGROUND BUILD (padat & jelas) ===== */
-  function clearBG(){ L1.innerHTML=''; L2.innerHTML=''; L3.innerHTML=''; }
-  function mkCloud(parent, size=1, y=[12,80], fromLeft=true, slow=58){
+  /* ================= BACKGROUND BUILD ================= */
+  function clearBG(){ LBack.innerHTML=''; LMid.innerHTML=''; LFront.innerHTML=''; }
+  function mkCloud(parent, size=1, y=[12,80], fromLeft=true, dur=60){
     const c=document.createElement('div'); c.className='cloud';
-    c.style.width=(140*size)+'px'; c.style.height=(62*size)+'px';
+    c.style.width=(160*size)+'px'; c.style.height=(70*size)+'px';
     c.style.top=rand(y[0],y[1])+'vh';
-    c.style.left=fromLeft? rand(-140,-30)+'%' : rand(130,210)+'%';
-    c.style.animation = fromLeft ? `driftRight ${slow}s linear infinite` : `driftLeft ${slow-20}s linear infinite`;
+    c.style.left=fromLeft? rand(-160,-40)+'%' : rand(140,220)+'%';
+    c.style.animation = fromLeft ? `driftRight ${dur}s linear infinite` : `driftLeft ${dur-16}s linear infinite`;
     parent.appendChild(c);
   }
   function mkBalloonRow(){
-    const colors=['#ff7ab6','#ffd166','#34d399','#60a5fa','#a78bfa','#f472b6','#fb7185'];
-    for(let i=0;i<6;i++){
+    const colors=['#ff7ab6','#ffd166','#34d399','#60a5fa','#a78bfa','#f472b6','#fb7185','#22d3ee','#f59e0b'];
+    for(let i=0;i<10;i++){
       const b=document.createElement('div'); b.className='balloon';
       b.style.setProperty('--col', colors[i%colors.length]);
-      b.style.top=rand(15,75)+'vh';
-      b.style.left='-15vw';
-      b.style.animationDelay=(i*2)+'s';
-      L2.appendChild(b);
+      b.style.top=rand(10,80)+'vh';
+      b.style.left='-20vw';
+      b.style.animationDelay=(i*1.2)+'s';
+      LFront.appendChild(b);
     }
   }
-  function mkStar(){ const s=document.createElement('div'); s.className='star'; s.style.left=rand(2,98)+'vw'; s.style.top=rand(4,45)+'vh'; s.style.animation='twinkle '+(1.8+Math.random()*1.6)+'s ease-in-out infinite'; L1.appendChild(s); }
+  function mkStar(){
+    const s=document.createElement('div'); s.className='star';
+    s.style.left=rand(2,98)+'vw'; s.style.top=rand(6,60)+'vh';
+    s.style.animation='twinkle '+(1.6+Math.random()*1.2)+'s ease-in-out infinite';
+    LMid.appendChild(s);
+  }
   function mkWind(){
     const w=document.createElement('div'); w.className='wind';
-    w.style.setProperty('--y', rand(8,88)+'vh'); w.style.setProperty('--tw', (3.6+Math.random()*1.2)+'s');
-    (Math.random()<.5?L1:L2).appendChild(w); w.addEventListener('animationend', ()=>w.remove());
+    w.style.setProperty('--y', rand(8,92)+'vh'); w.style.setProperty('--tw', (3+Math.random()*1.2)+'s');
+    (Math.random()<.5?LBack:LMid).appendChild(w); w.addEventListener('animationend', ()=>w.remove());
   }
   function mkSparkle(){
     const sp=document.createElement('div'); sp.className='sparkle';
-    sp.style.left=rand(5,95)+'vw'; sp.style.top=rand(8,60)+'vh';
-    (Math.random()<.5?L1:L2).appendChild(sp); sp.addEventListener('animationend', ()=>sp.remove());
+    sp.style.left=rand(4,96)+'vw'; sp.style.top=rand(8,60)+'vh';
+    (Math.random()<.5?LMid:LFront).appendChild(sp); sp.addEventListener('animationend', ()=>sp.remove());
   }
+  setInterval(mkWind, 250);
+  setInterval(mkSparkle, 400);
 
-  setInterval(mkWind, 450);     // banyak
-  setInterval(mkSparkle, 700);  // banyak juga
-
-  function themeBuild(theme){
+  function buildSky(){
     clearBG();
-    // layer belakang besar
-    for(let i=0;i<5;i++) mkCloud(L3, 1.3, [10,70], true, 90);
-    // layer tengah & depan
-    for(let i=0;i<7;i++) mkCloud(L1, 1, [12,78], true, 58);
-    for(let i=0;i<7;i++) mkCloud(L2, .9,[18,82], false, 38);
-    if(theme==='night'){ for(let i=0;i<90;i++) mkStar(); $('.sun').style.display='none'; }
-    else { $('.sun').style.display='block'; }
-    if(theme==='balloon'||theme==='final'){ mkBalloonRow(); }
+    for(let i=0;i<8;i++) mkCloud(LBack, 1.4, [8,72], true, 100);
+    for(let i=0;i<10;i++) mkCloud(LMid,  1.1, [12,78], true, 60);
+    for(let i=0;i<10;i++) mkCloud(LFront,1.0, [18,84], false, 34);
+    mkBalloonRow(); mkBalloonRow(); // dua gelombang
+    for(let i=0;i<120;i++) mkStar();
   }
 
-  /* ===== GRID ===== */
+  /* ================= GRID ================= */
   function buildGrid(cfg){
     const {max, cols, rows, time}=cfg;
     maxN=max; seq=1; targetEl.textContent='1'; combo=0; comboEl.textContent='0';
@@ -306,10 +310,10 @@
     });
     remaining=time; timeEl.textContent=remaining.toFixed(3);
     stopTicker(true);
-    if(chaos){ startChaos(); }
+    if(chaos) startChaos();
   }
 
-  /* ===== TIMER COUNTDOWN ===== */
+  /* ================= TIMER ================= */
   function startTicker(){
     started=true; deadline=performance.now()+remaining*1000;
     ticker=setInterval(()=>{
@@ -320,33 +324,29 @@
   }
   function stopTicker(reset=false){ if(ticker){clearInterval(ticker); ticker=null} if(reset) started=false }
 
-  /* ===== CHAOS MODE ===== */
+  /* ================= CHAOS MODE ================= */
   function startChaos(){
     stopChaos();
     chaosTimer=setInterval(()=>{
-      // guncang board sebentar
       board.classList.add('shake'); setTimeout(()=>board.classList.remove('shake'), 260);
-      // geser posisi 6 angka secara acak
       const cells=[...board.querySelectorAll('.cell:not([disabled])')];
       for(let i=0;i<6 && cells.length>1;i++){
-        const a=rand(0,cells.length-1); const b=rand(0,cells.length-1);
+        const a=rand(0,cells.length-1), b=rand(0,cells.length-1);
         if(a!==b){ board.insertBefore(cells[a], cells[b]); }
       }
-    }, 5000);
+    }, 4000);
   }
   function stopChaos(){ if(chaosTimer){ clearInterval(chaosTimer); chaosTimer=null } }
 
-  /* ===== AUDIO POP ===== */
+  /* ================= AUDIO & EFFECTS ================= */
   function pop(ok=true){
-    const ctx=audioCtx; if(!ctx) return;
+    const ctx='AudioContext' in window ? audioCtx : null; if(!ctx) return;
     const o=ctx.createOscillator(), g=ctx.createGain();
-    o.type='triangle'; o.frequency.value=ok?740:200; g.gain.value=.0001;
+    o.type='triangle'; o.frequency.value=ok?760:200; g.gain.value=.0001;
     o.connect(g); g.connect(ctx.destination); o.start();
-    const t=ctx.currentTime; g.gain.exponentialRampToValueAtTime(.26, t+.01); g.gain.exponentialRampToValueAtTime(.0001, t+.1); o.stop(t+.12);
+    const t=ctx.currentTime; g.gain.exponentialRampToValueAtTime(.28, t+.01); g.gain.exponentialRampToValueAtTime(.0001, t+.1); o.stop(t+.12);
   }
-
-  /* ===== EFFECTS ===== */
-  function confetti(n=140){
+  function confetti(n=180){
     for(let i=0;i<n;i++){
       const e=document.createElement('div'); e.className='confetti';
       e.style.left=(50+(Math.random()*60-30))+'vw';
@@ -356,15 +356,16 @@
       document.body.appendChild(e); e.addEventListener('animationend', ()=>e.remove());
     }
   }
-  function toastMsg(t){ toast.textContent=t; toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'), 1800) }
+  function toastMsg(t){ const el=$('#toast'); el.textContent=t; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'), 1800) }
 
-  /* ===== STORAGE ===== */
+  /* ================= STORAGE ================= */
   const key=(lvl)=>`nr_best_${lvl}`;
   const loadBest=(lvl)=>{const v=localStorage.getItem(key(lvl)); return v?parseFloat(v):null};
   const saveBest=(lvl,val)=>{const b=loadBest(lvl); if(b==null||val<b){localStorage.setItem(key(lvl), String(val.toFixed(3))); return true} return false};
   const renderBest=(lvl)=>{const b=loadBest(lvl); bestEl.textContent=b?`${b.toFixed(3)}s`:'—'};
 
-  /* ===== GAMEPLAY ===== */
+  /* ================= GAMEPLAY ================= */
+  let lastHit=0, combo=0;
   function penalize(sec){ remaining=Math.max(0, remaining-sec); chipTime.classList.add('warn'); setTimeout(()=>chipTime.classList.remove('warn'), 300); }
   function addTime(sec){ remaining+=sec; deadline+=sec*1000; toastMsg(`Bonus +${sec}s ⏱️`); }
 
@@ -373,13 +374,13 @@
     if(n===seq){
       cell.classList.add('correct'); cell.disabled=true; seq++; targetEl.textContent= seq<=maxN? seq : '✔'; pop(true);
       const now=performance.now();
-      if(now - lastHit <= 900){ combo++; } else { combo=1; }
+      if(now-lastHit<=900){ combo++; } else { combo=1; }
       lastHit=now; comboEl.textContent=String(Math.min(combo,5));
       if(combo>=5){ addTime(3); combo=0; comboEl.textContent='0'; }
       if(seq>maxN){
         stopTicker(); const used=levels[parseInt(levelSel.value,10)].time - remaining;
         const isBest=saveBest(parseInt(levelSel.value,10), used); renderBest(parseInt(levelSel.value,10));
-        confetti(180); toastMsg(isBest?'Rekor baru! 🎉':'Selesai! ✅');
+        confetti(200); toastMsg(isBest?'Rekor baru! 🎉':'Selesai! ✅');
       }
     } else {
       pop(false); board.classList.remove('shake'); void board.offsetWidth; board.classList.add('shake');
@@ -388,25 +389,19 @@
     }
   }
 
-  function gameOver(){
-    toastMsg('Waktu habis! ⏰');
-    board.querySelectorAll('.cell').forEach(c=>c.disabled=true);
-  }
+  function gameOver(){ toastMsg('Waktu habis! ⏰'); board.querySelectorAll('.cell').forEach(c=>c.disabled=true); }
 
   function start(){
     const lvl=parseInt(levelSel.value,10), cfg=levels[lvl];
-    themeBuild(cfg.theme); buildGrid(cfg); renderBest(lvl);
+    buildSky(); buildGrid(cfg); renderBest(lvl);
   }
 
   btn.addEventListener('click', start);
   levelSel.addEventListener('change', start);
-  chaosBtn.addEventListener('click', ()=>{
-    chaos=!chaos; chaosBtn.textContent = `Chaos: ${chaos?'ON':'OFF'}`;
-    if(chaos) startChaos(); else stopChaos();
-  });
+  chaosBtn.addEventListener('click', ()=>{ chaos=!chaos; chaosBtn.textContent=`Chaos: ${chaos?'ON':'OFF'}`; if(chaos) startChaos(); else stopChaos(); });
 
   // INIT
-  themeBuild(levels[1].theme); buildGrid(levels[1]); renderBest(1);
+  buildSky(); buildGrid(levels[1]); renderBest(1);
 })();
 </script>
 </body>
