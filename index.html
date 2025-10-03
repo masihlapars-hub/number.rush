@@ -1,21 +1,17 @@
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Number Rush — Sky Glass</title>
+<title>Number Rush — Sky Glass Challenge</title>
 <style>
   :root{
-    /* Warna dasar */
-    --bg1:#c9e7ff; --bg2:#ffd7f2; --bg3:#fff5d6;      /* gradient pastel */
-    --ink:#0f172a; --muted:#64748b;
-    --line:rgba(255,255,255,.35);
+    --bg1:#c9e7ff; --bg2:#ffd7f2; --bg3:#fff5d6;
+    --ink:#0f172a; --muted:#64748b; --line:rgba(255,255,255,.35);
     --primary:#7c3aed; --primary2:#a78bfa;
     --ok:#22c55e; --err:#ef4444;
-    --shadow:0 16px 40px rgba(15,23,42,.18);
-    --r:18px;
   }
-
   *{box-sizing:border-box}
   html,body{height:100%}
   body{
@@ -28,19 +24,16 @@
     min-height:100svh;
     padding:max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right))
             max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
-    overflow:auto; /* tidak kepotong di tablet */
+    overflow:auto;
   }
 
-  /* ===== BACKGROUND ANIMASI (lebih jelas) ===== */
+  /* ===== BACKGROUND: selalu bergerak ===== */
   .bg{position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden}
   .sun{position:absolute; right:4vw; top:4vh; width:96px; height:96px; border-radius:50%;
-       background:#ffd166; box-shadow:0 0 46px #ffd166aa, inset -12px -14px 0 #ffc43d;
-       animation:pulse 4s ease-in-out infinite}
+       background:#ffd166; box-shadow:0 0 46px #ffd166aa, inset -12px -14px 0 #ffc43d; animation:pulse 4s ease-in-out infinite}
   @keyframes pulse{0%,100%{transform:scale(1)} 50%{transform:scale(1.05)}}
-
   .layer{position:absolute; inset:0}
-  .cloud{position:absolute; background:#fff; border-radius:60px;
-         filter:drop-shadow(0 10px 24px rgba(0,0,0,.12))}
+  .cloud{position:absolute; background:#fff; border-radius:60px; filter:drop-shadow(0 10px 24px rgba(0,0,0,.12))}
   .cloud:before,.cloud:after{content:""; position:absolute; background:#fff; border-radius:80px}
   .cloud:before{width:70%; height:70%; left:-25%; top:10%}
   .cloud:after{width:55%; height:55%; right:-20%; top:20%}
@@ -48,94 +41,63 @@
   @keyframes drift-fast{from{transform:translateX(120%)} to{transform:translateX(-120%)}}
   .l1 .cloud{animation:drift-slow var(--t,60s) linear infinite; opacity:.95}
   .l2 .cloud{animation:drift-fast var(--t,42s) linear infinite; opacity:.82}
-
-  .balloon{
-    position:absolute; width:44px; height:58px; border-radius:50% 50% 45% 45%/60% 60% 40% 40%;
-    background:radial-gradient(70% 90% at 35% 20%, #fff6, transparent), var(--col,#ff7ab6);
-    box-shadow:0 10px 20px rgba(0,0,0,.2);
-    animation:float 5.5s ease-in-out infinite, sway 4s ease-in-out infinite;
-  }
+  .balloon{position:absolute; width:44px; height:58px; border-radius:50% 50% 45% 45%/60% 60% 40% 40%;
+           background:radial-gradient(70% 90% at 35% 20%, #fff6, transparent), var(--col,#ff7ab6);
+           box-shadow:0 10px 20px rgba(0,0,0,.2); animation:float 5.5s ease-in-out infinite, sway 4s ease-in-out infinite}
   .balloon:after{content:""; position:absolute; left:50%; bottom:-10px; width:2px; height:24px; background:#6b7280; transform:translateX(-50%)}
   @keyframes float{0%,100%{transform:translateY(0)} 50%{transform:translateY(-18px)}}
   @keyframes sway{0%,100%{margin-left:0} 50%{margin-left:8px}}
-
   .star{position:absolute; width:4px; height:4px; background:#fff; border-radius:50%; box-shadow:0 0 8px #fff8}
   @keyframes twinkle{0%,100%{opacity:.2; transform:scale(.6)} 50%{opacity:1; transform:scale(1)}}
 
-  /* ===== WRAPPER / GLASS THEME ===== */
+  /* hembusan angin garis tipis */
+  .wind{position:absolute; top:0; width:120px; height:2px; background:linear-gradient(90deg,transparent,#ffffffaa,transparent);
+        filter:blur(.3px); opacity:.8; animation:blow var(--tw,5s) linear forwards}
+  @keyframes blow{from{transform:translate(-20vw, var(--y))} to{transform:translate(120vw, var(--y))}}
+
+  /* ===== GLASS LAYOUT ===== */
   .wrap{position:relative; z-index:1; display:grid; place-items:center; min-height:calc(100svh - 24px)}
-  .card{
-    width:min(1120px,100%);
-    background:rgba(255,255,255,.45);         /* transparan */
-    backdrop-filter: blur(16px) saturate(140%);/* efek kaca */
-    border:1px solid var(--line);
-    border-radius:var(--r);
-    box-shadow:var(--shadow);
-    overflow:hidden;
-  }
-  header{
-    display:flex; gap:12px; align-items:center; padding:14px 16px;
-    border-bottom:1px solid var(--line);
-    background:linear-gradient(180deg, rgba(255,255,255,.6), rgba(255,255,255,.35));
-    backdrop-filter: blur(10px) saturate(140%);
-  }
+  .card{width:min(1120px,100%); background:rgba(255,255,255,.45); backdrop-filter: blur(16px) saturate(140%);
+        border:1px solid var(--line); border-radius:18px; box-shadow:0 16px 40px rgba(15,23,42,.18); overflow:hidden}
+  header{display:flex; gap:12px; align-items:center; padding:14px 16px; border-bottom:1px solid var(--line);
+         background:linear-gradient(180deg, rgba(255,255,255,.6), rgba(255,255,255,.35)); backdrop-filter: blur(10px)}
   .logo{width:30px; height:30px; display:grid; place-items:center; border-radius:10px; color:#fff; font-weight:800;
         background:conic-gradient(from 120deg, var(--primary), var(--primary2))}
   header h1{font-size:18px; margin:0}
   .sub{font-size:12px; color:var(--muted)}
-
   .content{display:grid; gap:14px; padding:14px}
   @media (min-width:980px){ .content{ grid-template-columns: 1.15fr .85fr; } }
-
-  .panel{
-    background:rgba(255,255,255,.5);          /* panel kaca */
-    border:1px solid var(--line);
-    border-radius:16px;
-    padding:14px;
-    box-shadow:0 10px 24px rgba(15,23,42,.08);
-    backdrop-filter: blur(14px) saturate(160%);
-  }
+  .panel{background:rgba(255,255,255,.5); border:1px solid var(--line); border-radius:16px; padding:14px;
+         box-shadow:0 10px 24px rgba(15,23,42,.08); backdrop-filter: blur(14px) saturate(160%)}
 
   /* HUD */
   .hud{display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between; margin-bottom:10px}
   .stats{display:flex; gap:10px; flex-wrap:wrap}
-  .chip{
-    background:rgba(255,255,255,.65);
-    border:1px solid var(--line);
-    padding:8px 10px; border-radius:999px; font-size:13px; display:flex; gap:8px; align-items:center;
-    backdrop-filter: blur(10px);
-  }
+  .chip{background:rgba(255,255,255,.65); border:1px solid var(--line); padding:8px 10px; border-radius:999px; font-size:13px; display:flex; gap:8px; align-items:center; backdrop-filter: blur(10px)}
   .chip b{font-variant-numeric:tabular-nums}
+  .chip.warn{box-shadow:0 0 0 3px #fecaca88}
   select{border:1px solid var(--line); background:rgba(255,255,255,.9); padding:8px 10px; border-radius:10px; font-weight:600}
-  .btn{
-    appearance:none; border:0;
-    background:linear-gradient(180deg, var(--primary), var(--primary2)); color:#fff;
-    padding:10px 14px; border-radius:12px; font-weight:700; cursor:pointer;
-    box-shadow:0 12px 26px rgba(124,58,237,.35);
-  }
+  .btn{appearance:none; border:0; background:linear-gradient(180deg, var(--primary), var(--primary2)); color:#fff; padding:10px 14px; border-radius:12px; font-weight:700; cursor:pointer; box-shadow:0 12px 26px rgba(124,58,237,.35)}
   .btn:active{transform:translateY(1px) scale(.99)}
 
-  /* BOARD (solid agar angka jelas di atas background) */
+  /* BOARD dengan animasi gradient */
   .board-wrap{display:grid; place-items:center}
   .board{
     width:100%; max-width:100%;
     block-size:min(72svh, 76vw);
     aspect-ratio:1/1;
-    background:linear-gradient(180deg,#f9fafbcc,#f3f4f6cc); /* sedikit transparan */
+    background:
+      radial-gradient(60% 60% at 50% 40%, #ffffffcc, transparent 60%),
+      linear-gradient(180deg,#f9fafbcc,#f3f4f6cc);
+    background-size:200% 200%;
+    animation:breath 6s ease-in-out infinite;
     border:1px solid rgba(229,231,235,.8);
-    border-radius:14px; display:grid; gap:8px; padding:10px; overflow:hidden;
-    backdrop-filter: blur(6px);
+    border-radius:14px; display:grid; gap:8px; padding:10px; overflow:hidden; backdrop-filter: blur(6px)
   }
-  .cell{
-    display:grid; place-items:center;
-    background:#fff;                                /* SOLID untuk kontras */
-    border:1px solid #e5e7eb;
-    border-radius:12px;
-    font-weight:800; font-size: clamp(16px, 3.6cqi, 28px);
-    user-select:none; cursor:pointer;
-    transition:transform .08s ease, box-shadow .12s ease, background .12s ease;
-    box-shadow:0 6px 14px rgba(15,23,42,.08);
-  }
+  @keyframes breath{0%,100%{background-position:50% 40%} 50%{background-position:50% 60%}}
+  .cell{display:grid; place-items:center; background:#fff; border:1px solid #e5e7eb; border-radius:12px; font-weight:800;
+        font-size: clamp(16px, 3.6cqi, 28px); user-select:none; cursor:pointer; transition:transform .08s ease, box-shadow .12s ease, background .12s ease;
+        box-shadow:0 6px 14px rgba(15,23,42,.08)}
   .cell:hover{ box-shadow:0 10px 20px rgba(15,23,42,.12) }
   .cell.correct{ background:#ecfdf5; border-color:#bbf7d0 }
   .cell.wrong{ background:#fef2f2; border-color:#fecaca }
@@ -146,17 +108,13 @@
   .title{font-weight:800; margin:0 0 6px}
   .sidebar p{margin:6px 0; color:var(--muted); font-size:14px}
   .list{display:grid; gap:8px}
-  .row{display:flex; justify-content:space-between; align-items:center; padding:8px 10px;
-       border:1px dashed var(--line); border-radius:10px; background:rgba(255,255,255,.45); backdrop-filter: blur(8px)}
+  .row{display:flex; justify-content:space-between; align-items:center; padding:8px 10px; border:1px dashed var(--line); border-radius:10px; background:rgba(255,255,255,.45); backdrop-filter: blur(8px)}
   .tag{font-size:12px; padding:4px 8px; border-radius:999px; background:#eef2ff; color:#4338ca; border:1px solid #e0e7ff}
 
   /* Toast & Confetti */
-  .toast{position:fixed; left:50%; bottom:18px; transform:translateX(-50%) translateY(60px); opacity:0;
-         background:#111827; color:#fff; padding:10px 14px; border-radius:12px; box-shadow:0 10px 24px rgba(0,0,0,.2); z-index:3;
-         transition: transform .25s ease, opacity .25s ease; font-size:14px}
+  .toast{position:fixed; left:50%; bottom:18px; transform:translateX(-50%) translateY(60px); opacity:0; background:#111827; color:#fff; padding:10px 14px; border-radius:12px; box-shadow:0 10px 24px rgba(0,0,0,.2); z-index:3; transition: transform .25s ease, opacity .25s ease; font-size:14px}
   .toast.show{transform:translateX(-50%) translateY(0); opacity:1}
-  .confetti{position:fixed; top:-10px; width:9px; height:14px; border-radius:2px; opacity:.95; pointer-events:none; z-index:2;
-            animation:fall var(--t,2.6s) linear forwards}
+  .confetti{position:fixed; top:-10px; width:9px; height:14px; border-radius:2px; opacity:.95; pointer-events:none; z-index:2; animation:fall var(--t,2.6s) linear forwards}
   @keyframes fall{to{transform:translate3d(var(--x,0), 110svh, 0) rotate(720deg)}}
 </style>
 </head>
@@ -173,8 +131,8 @@
       <header>
         <div class="logo">NR</div>
         <div>
-          <h1>Number Rush — Sky Glass</h1>
-          <div class="sub">Tema transparan (glass), tombol solid. Animasi awan • balon • bintang ✨</div>
+          <h1>Number Rush — Sky Glass <span class="tag" style="font-size:11px; padding:3px 6px; margin-left:6px; background:#ecfeff; color:#0369a1; border:1px solid #a5f3fc; border-radius:999px;">Challenge</span></h1>
+          <div class="sub">Tema transparan. Animasi konstan. Ada <b>countdown</b>, <b>combo</b>, dan <b>penalti</b> waktu.</div>
         </div>
       </header>
 
@@ -185,16 +143,17 @@
             <div class="stats">
               <div class="chip">Level:
                 <select id="level">
-                  <option value="1">1 • Cloudy Start (1–20)</option>
-                  <option value="2">2 • Starry Night (1–30)</option>
-                  <option value="3">3 • Rainbow Ride (1–40)</option>
-                  <option value="4">4 • Balloon Festival (1–50)</option>
-                  <option value="5">5 • Final Sky (1–60)</option>
+                  <option value="1">1 • Cloudy Start (1–20) • 25s</option>
+                  <option value="2">2 • Starry Night (1–30) • 35s</option>
+                  <option value="3">3 • Rainbow Ride (1–40) • 45s</option>
+                  <option value="4">4 • Balloon Festival (1–50) • 55s</option>
+                  <option value="5">5 • Final Sky (1–60) • 65s</option>
                 </select>
               </div>
               <div class="chip">Target: <b id="target">1</b></div>
-              <div class="chip">Waktu: <b id="time">0.000</b>s</div>
+              <div class="chip" id="chipTime">Sisa: <b id="time">25.000</b>s</div>
               <div class="chip">Rekor: <b id="best">—</b></div>
+              <div class="chip">Combo: <b id="combo">0</b>/5</div>
             </div>
             <button class="btn" id="btnStart">Mulai / Ulang</button>
           </div>
@@ -207,14 +166,13 @@
         <!-- RIGHT -->
         <aside class="panel sidebar">
           <h3 class="title">Cara Main</h3>
-          <p>Klik angka dari <b>kecil → besar</b>. Timer mulai saat klik pertama.</p>
+          <p>Klik angka dari <b>kecil → besar</b>. Waktu <b>mundur</b> mulai saat klik pertama.</p>
           <div class="list">
-            <div class="row"><span>Benar</span><span class="tag">lanjut ➜</span></div>
-            <div class="row"><span>Salah</span><span class="tag">shake 😵</span></div>
-            <div class="row"><span>Ganti Level</span><span class="tag">dropdown ↑</span></div>
-            <div class="row"><span>Rekor</span><span class="tag">localStorage</span></div>
+            <div class="row"><span>Combo</span><span class="tag">5 cepat → +3s</span></div>
+            <div class="row"><span>Salah</span><span class="tag">-2s & shake 😵</span></div>
+            <div class="row"><span>Rekor</span><span class="tag">per level</span></div>
           </div>
-          <p style="margin-top:10px">Tema transparan memperlihatkan animasi belakang; tombol & angka tetap solid agar terbaca jelas.</p>
+          <p style="margin-top:10px">Animasi awan, balon, bintang & hembusan angin jalan terus biar makin hidup.</p>
         </aside>
       </div>
     </div>
@@ -227,20 +185,22 @@
   const $=(s,o=document)=>o.querySelector(s);
   const rand=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
   const shuffle=(a)=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
-
-  const levelSel=$('#level'), targetEl=$('#target'), timeEl=$('#time'), bestEl=$('#best'),
-        board=$('#board'), btn=$('#btnStart'), toast=$('#toast');
+  const levelSel=$('#level'), targetEl=$('#target'), timeEl=$('#time'), bestEl=$('#best'), chipTime=$('#chipTime'),
+        board=$('#board'), btn=$('#btnStart'), toast=$('#toast'), comboEl=$('#combo');
   const L1=$('#l1'), L2=$('#l2');
 
+  // Level config: jumlah angka, grid, tema, dan batas waktu (detik)
   const levels={
-    1:{max:20, cols:5, rows:4, theme:'day'},
-    2:{max:30, cols:6, rows:5, theme:'night'},
-    3:{max:40, cols:7, rows:6, theme:'rainbow'},
-    4:{max:50, cols:8, rows:7, theme:'balloon'},
-    5:{max:60, cols:8, rows:8, theme:'final'}
+    1:{max:20, cols:5, rows:4, theme:'day',     time:25},
+    2:{max:30, cols:6, rows:5, theme:'night',   time:35},
+    3:{max:40, cols:7, rows:6, theme:'rainbow', time:45},
+    4:{max:50, cols:8, rows:7, theme:'balloon', time:55},
+    5:{max:60, cols:8, rows:8, theme:'final',   time:65}
   };
 
-  let seq=1, maxN=20, started=false, t0=0, timer=null;
+  // State
+  let seq=1, maxN=20, started=false, deadline=0, ticker=null, remaining=0;
+  let lastHit=0, combo=0; // combo logic
   const audioCtx='AudioContext' in window ? new AudioContext() : null;
 
   /* ===== BACKGROUND ===== */
@@ -261,12 +221,14 @@
     b.style.animationDelay=(Math.random()*2)+'s';
     L2.appendChild(b);
   }
-  function mkStar(){
-    const s=document.createElement('div'); s.className='star';
-    s.style.left=rand(2,98)+'vw'; s.style.top=rand(4,40)+'vh';
-    s.style.animation='twinkle '+(2+Math.random()*2)+'s ease-in-out infinite';
-    L1.appendChild(s);
+  function mkStar(){ const s=document.createElement('div'); s.className='star'; s.style.left=rand(2,98)+'vw'; s.style.top=rand(4,40)+'vh'; s.style.animation='twinkle '+(2+Math.random()*2)+'s ease-in-out infinite'; L1.appendChild(s); }
+  function mkWind(){ // garis angin melintas terus
+    const w=document.createElement('div'); w.className='wind';
+    w.style.setProperty('--y', rand(10,80)+'vh'); w.style.setProperty('--tw', (4+Math.random()*2)+'s');
+    L2.appendChild(w); w.addEventListener('animationend', ()=>w.remove());
   }
+  setInterval(mkWind, 700); // hembusan rutin
+
   function themeBuild(theme){
     clearBG();
     for(let i=0;i<7;i++) mkCloud(L1, 1, [12,78], true);
@@ -278,11 +240,10 @@
 
   /* ===== GRID ===== */
   function buildGrid(cfg){
-    const {max, cols, rows}=cfg;
-    maxN=max; seq=1; targetEl.textContent='1';
+    const {max, cols, rows, time}=cfg;
+    maxN=max; seq=1; targetEl.textContent='1'; combo=0; comboEl.textContent='0';
     board.classList.remove('shake'); board.innerHTML='';
-    board.style.gridTemplateColumns=`repeat(${cols}, 1fr)`;
-    board.style.gridTemplateRows=`repeat(${rows}, 1fr)`;
+    board.style.gridTemplateColumns=`repeat(${cols}, 1fr)`; board.style.gridTemplateRows=`repeat(${rows}, 1fr)`;
     const arr=shuffle(Array.from({length:max},(_,i)=>i+1));
     arr.forEach(n=>{
       const c=document.createElement('button');
@@ -290,14 +251,24 @@
       c.addEventListener('click',()=>onClick(c,n));
       board.appendChild(c);
     });
-    stopTimer(true);
+    // reset waktu
+    remaining=time; timeEl.textContent=remaining.toFixed(3);
+    stopTicker(true);
   }
 
-  /* ===== TIMER ===== */
-  function startTimer(){ started=true; t0=performance.now(); timer=setInterval(()=>{ timeEl.textContent=((performance.now()-t0)/1000).toFixed(3) }, 25); }
-  function stopTimer(reset=false){ if(timer){clearInterval(timer); timer=null} if(reset){ timeEl.textContent='0.000'; started=false } }
+  /* ===== TIMER (countdown) ===== */
+  function startTicker(){
+    started=true; deadline=performance.now()+remaining*1000;
+    ticker=setInterval(()=>{
+      remaining=(deadline-performance.now())/1000;
+      if(remaining<0) remaining=0;
+      timeEl.textContent=remaining.toFixed(3);
+      if(remaining===0){ stopTicker(); gameOver(); }
+    }, 25);
+  }
+  function stopTicker(reset=false){ if(ticker){clearInterval(ticker); ticker=null} if(reset){ started=false } }
 
-  /* ===== SOUND ===== */
+  /* ===== AUDIO ===== */
   function pop(ok=true){
     if(!audioCtx) return;
     const o=audioCtx.createOscillator(), g=audioCtx.createGain();
@@ -330,18 +301,49 @@
   const renderBest=(lvl)=>{const b=loadBest(lvl); bestEl.textContent=b?`${b.toFixed(3)}s`:'—'};
 
   /* ===== GAMEPLAY ===== */
+  function penalize(sec){
+    remaining=Math.max(0, remaining-sec);
+    chipTime.classList.add('warn');
+    setTimeout(()=>chipTime.classList.remove('warn'), 300);
+  }
+  function addTime(sec){
+    remaining+=sec; deadline+=sec*1000;
+    toastMsg(`Bonus waktu +${sec}s ⏱️`);
+  }
+
   function onClick(cell,n){
-    if(!started){ audioCtx?.resume?.(); startTimer(); }
+    if(!started){ audioCtx?.resume?.(); startTicker(); lastHit=performance.now(); }
     if(n===seq){
       cell.classList.add('correct'); cell.disabled=true; seq++; targetEl.textContent= seq<=maxN? seq : '✔'; pop(true);
+
+      // Combo check (≤ 900ms antar klik)
+      const now=performance.now();
+      if(now - lastHit <= 900){ combo++; } else { combo=1; }
+      lastHit=now;
+      comboEl.textContent=String(combo>5?5:combo);
+      if(combo>=5){ addTime(3); combo=0; comboEl.textContent='0'; }
+
       if(seq>maxN){
-        stopTimer(); const t=parseFloat(timeEl.textContent); const lvl=parseInt(levelSel.value,10);
-        const isBest=saveBest(lvl,t); renderBest(lvl); confetti(160); toastMsg(isBest?'Rekor baru! 🎉':'Selesai! ✅');
+        stopTicker();
+        const timeUsed = (levels[parseInt(levelSel.value,10)].time - remaining);
+        const isBest=saveBest(parseInt(levelSel.value,10), timeUsed);
+        renderBest(parseInt(levelSel.value,10));
+        confetti(160);
+        toastMsg(isBest?'Rekor baru! 🎉':'Selesai! ✅');
       }
     } else {
-      pop(false); board.classList.remove('shake'); void board.offsetWidth; board.classList.add('shake');
+      pop(false);
+      board.classList.remove('shake'); void board.offsetWidth; board.classList.add('shake');
       cell.classList.add('wrong'); setTimeout(()=>cell.classList.remove('wrong'),220);
+      penalize(2); // -2 detik
+      if(remaining===0){ stopTicker(); gameOver(); }
     }
+  }
+
+  function gameOver(){
+    toastMsg('Waktu habis! ⏰');
+    // disable all cells
+    board.querySelectorAll('.cell').forEach(c=>c.disabled=true);
   }
 
   function start(){
@@ -358,4 +360,3 @@
 </script>
 </body>
 </html>
-
