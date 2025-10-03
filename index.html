@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Number Rush — Sky Adventure</title>
+<style>
+  :root{
+    --sky:#BEE3F8;       /* pastel blue */
+    --sky2:#93C5FD;      /* deeper blue */
+    --cloud:#FFFFFF;
+    --sun:#FFD166;
+    --text:#0F172A;      /* slate-900 */
+    --panel:#FFFFFFEE;
+    --primary:#8B5CF6;   /* violet-500 */
+    --primary-2:#A78BFA; /* violet-400 */
+    --accent:#22C55E;    /* green-500 */
+    --danger:#EF4444;    /* red-500 */
+    --muted:#64748B;     /* slate-500 */
+    --shadow:0 12px 30px rgba(15,23,42,.18);
+    --radius:18px;
+  }
+
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,"Helvetica Neue",Arial;
+    color:var(--text);
+    background:
+      linear-gradient(180deg,var(--sky) 0%, var(--sky2) 100%);
+    overflow:hidden;
+  }
+
+  /* ===== Decorative Background ===== */
+  .bg-layer{position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden}
+  /* clouds */
+  .cloud{
+    position:absolute; background:var(--cloud);
+    border-radius:100px; filter:drop-shadow(0 10px 20px rgba(0,0,0,.08));
+    opacity:.9; animation: drift var(--dur,40s) linear infinite;
+  }
+  .cloud:before,.cloud:after{
+    content:""; position:absolute; background:var(--cloud); border-radius:100px;
+  }
+  .cloud:before{width:70%; height:70%; left:-25%; top:10%}
+  .cloud:after{width:55%; height:55%; right:-20%; top:20%}
+
+  @keyframes drift{
+    from{ transform: translateX(-120%); }
+    to{   transform: translateX(120%); }
+  }
+
+  /* balloons */
+  .balloon{
+    position:absolute; width:28px; height:36px; background:radial-gradient(60% 80% at 40% 20%, #fff8, transparent), var(--bcol,#F87171);
+    border-radius:50% 50% 45% 45%/55% 55% 45% 45%;
+    box-shadow:0 6px 16px rgba(0,0,0,.15);
+    animation: float 6s ease-in-out infinite;
+    opacity:.9;
+  }
+  .balloon:after{
+    content:""; position:absolute; left:50%; bottom:-8px; width:2px; height:20px; background:#6B7280;
+    transform:translateX(-50%);
+  }
+  @keyframes float{
+    0%{ transform:translateY(0) }
+    50%{ transform:translateY(-16px) }
+    100%{ transform:translateY(0) }
+  }
+
+  /* stars (for night levels) */
+  .star{position:absolute; width:3px; height:3px; background:#FFF; border-radius:50%; opacity:0; animation: twinkle 3s ease-in-out infinite;}
+  @keyframes twinkle{
+    0%,100%{opacity:.1; transform:scale(.5)}
+    50%{opacity:1; transform:scale(1)}
+  }
+
+  /* sun & rainbow (occasionally visible) */
+  .sun{
+    position:absolute; right:4vw; top:4vh; width:80px; height:80px; background:var(--sun);
+    border-radius:50%; box-shadow:0 0 40px #FFD166AA, inset -8px -10px 0 #FFC43D;
+    animation: pulse 4s ease-in-out infinite;
+  }
+  @keyframes pulse{ 0%,100%{transform:scale(1)} 50%{transform:scale(1.04)} }
+
+  .rainbow{
+    position:absolute; left:2vw; top:8vh; width:300px; height:150px; border-radius:0 0 300px 300px / 0 0 150px 150px;
+    background:
+      radial-gradient(100px 80px at 50% 0,#F87171 60%,transparent 61%) no-repeat 0 0/100% 100%,
+      radial-gradient(110px 88px at 50% 0,#FBBF24 60%,transparent 61%) no-repeat 0 0/100% 100%,
+      radial-gradient(120px 96px at 50% 0,#34D399 60%,transparent 61%) no-repeat 0 0/100% 100%,
+      radial-gradient(130px 104px at 50% 0,#60A5FA 60%,transparent 61%) no-repeat 0 0/100% 100%,
+      radial-gradient(140px 112px at 50% 0,#A78BFA 60%,transparent 61%) no-repeat 0 0/100% 100%;
+    opacity:.65; filter:blur(.3px);
+  }
+
+  /* ===== UI Layout ===== */
+  .wrap{
+    position:relative; z-index:1; display:grid; place-items:center; min-height:100%;
+    padding:24px;
+  }
+  .card{
+    width:min(980px, 96vw); background:var(--panel); backdrop-filter: blur(8px);
+    border-radius:var(--radius); box-shadow:var(--shadow); border:1px solid #FFFFFFBB;
+    overflow:hidden;
+  }
+  header{
+    display:flex; align-items:center; gap:14px; padding:16px 18px; border-bottom:1px solid #e5e7eb;
+    background:linear-gradient(180deg,#fff, #fffefc);
+  }
+  header .logo{
+    width:28px; height:28px; display:grid; place-items:center; border-radius:10px;
+    background: conic-gradient(from 120deg, var(--primary), var(--primary-2));
+    color:#fff; font-weight:800; font-size:16px; letter-spacing:.2px;
+  }
+  header h1{font-size:18px; margin:0}
+  header .sub{color:var(--muted); font-size:12px}
+
+  .content{ display:grid; grid-template-columns: 1fr; gap:16px; padding:18px }
+  @media (min-width:920px){ .content{ grid-template-columns: 1.1fr .9fr; } }
+
+  .panel{
+    border:1px solid #E5E7EB; border-radius:16px; padding:16px; background:#fff;
+    box-shadow:0 6px 16px rgba(0,0,0,.06);
+  }
+
+  /* HUD */
+  .hud{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between; margin-bottom:12px }
+  .hud .stats{ display:flex; gap:10px; flex-wrap:wrap; align-items:center }
+  .chip{
+    background:#F8FAFC; border:1px solid #E5E7EB; padding:8px 10px; border-radius:999px; font-size:13px; display:flex; gap:8px; align-items:center
+  }
+  .chip b{font-variant-numeric:tabular-nums}
+  .btn{
+    appearance:none; border:0; background:linear-gradient(180deg, var(--primary), var(--primary-2));
+    color:#fff; padding:10px 14px; border-radius:12px; font-weight:700; cursor:pointer; box-shadow:0 8px 18px rgba(139,92,246,.35); transition:transform .08s ease, filter .08s ease;
+  }
+  .btn:active{ transform:translateY(1px) scale(.99) }
+
+  select{
+    border:1px solid #E5E7EB; background:#fff; padding:8px 10px; border-radius:10px; font-weight:600
+  }
+
+  /* Grid Board */
+  .board{ position:relative; aspect-ratio: 1 / 1; width:100%; background:linear-gradient(180deg,#F9FAFB,#F3F4F6);
+    border:1px solid #E5E7EB; border-radius:14px; display:grid; gap:8px; padding:10px; overflow:hidden
+  }
+  .cell{
+    display:grid; place-items:center; background:#ffffff; border:1px solid #E5E7EB; border-radius:12px; font-weight:800;
+    font-size: clamp(16px, 2.8vw, 26px); cursor:pointer; user-select:none; transition:transform .08s ease, box-shadow .12s ease, background .12s ease;
+    box-shadow:0 4px 10px rgba(15,23,42,.05);
+  }
+  .cell:hover{ box-shadow:0 8px 18px rgba(15,23,42,.08) }
+  .cell.correct{ background:#ECFDF5; border-color:#D1FAE5; }
+  .cell.wrong{ background:#FEF2F2; border-color:#FECACA; }
+
+  /* shake on wrong */
+  .shake{ animation: shake .28s linear }
+  @keyframes shake{
+    0%,100%{ transform:translateX(0) }
+    25%{ transform:translateX(-6px) }
+    75%{ transform:translateX(6px) }
+  }
+
+  /* Sidebar */
+  .sidebar .title{ font-weight:800; margin:0 0 6px}
+  .sidebar p{ margin:6px 0; color:var(--muted); font-size:14px }
+  .list{ display:grid; gap:8px; }
+  .row{ display:flex; justify-content:space-between; align-items:center; padding:8px 10px; border:1px dashed #E5E7EB; border-radius:10px; }
+  .row code{ background:#F1F5F9; padding:2px 6px; border-radius:6px}
+  .tag{ font-size:12px; padding:4px 8px; border-radius:999px; background:#EEF2FF; color:#4338CA; border:1px solid #E0E7FF }
+
+  /* Toast */
+  .toast{
+    position:fixed; left:50%; bottom:18px; transform:translateX(-50%) translateY(60px); opacity:0;
+    background:#111827; color:#fff; padding:10px 14px; border-radius:12px; box-shadow:0 10px 24px rgba(0,0,0,.2);
+    transition: transform .25s ease, opacity .25s ease; z-index:3; font-size:14px
+  }
+  .toast.show{ transform:translateX(-50%) translateY(0); opacity:1 }
+
+  /* Confetti */
+  .confetti{ position:fixed; top:-10px; width:8px; height:14px; opacity:.95; border-radius:2px; pointer-events:none; z-index:2; animation: fall var(--t, 2.6s) linear forwards; }
+  @keyframes fall{
+    to{ transform: translate3d(var(--x, 0), 110vh, 0) rotate(720deg) }
+  }
+</style>
+</head>
+<body>
+  <!-- Background decoration -->
+  <div class="bg-layer" id="bg">
+    <div class="sun"></div>
+    <div class="rainbow"></div>
+  </div>
+
+  <div class="wrap">
+    <div class="card">
+      <header>
+        <div class="logo">NR</div>
+        <div>
+          <h1>Number Rush — Sky Adventure</h1>
+          <div class="sub">Klik angka berurutan secepat mungkin. Tema langit imut + animasi lucu ✨</div>
+        </div>
+      </header>
+
+      <div class="content">
+        <!-- Left: Game panel -->
+        <div class="panel">
+          <div class="hud">
+            <div class="stats">
+              <div class="chip">Level:
+                <select id="level">
+                  <option value="1">1 • Cloudy Start (1–20)</option>
+                  <option value="2">2 • Starry Night (1–30)</option>
+                  <option value="3">3 • Rainbow Ride (1–40)</option>
+                  <option value="4">4 • Balloon Festival (1–50)</option>
+                  <option value="5">5 • Final Sky (1–60)</option>
+                </select>
+              </div>
+              <div class="chip">Target: <b id="target">1</b></div>
+              <div class="chip">Waktu: <b id="time">0.000</b>s</div>
+              <div class="chip">Rekor: <b id="best">—</b></div>
+            </div>
+            <div class="actions">
+              <button class="btn" id="btnStart">Mulai / Ulang</button>
+            </div>
+          </div>
+          <div id="board" class="board"></div>
+        </div>
+
+        <!-- Right: Help & notes -->
+        <aside class="panel sidebar">
+          <h3 class="title">Cara Main</h3>
+          <p>Klik angka dari <b>kecil → besar</b> sesuai urutan. Waktu mulai berjalan saat klik pertama.</p>
+          <div class="list">
+            <div class="row"><span>Benar</span><span class="tag">+ lanjut</span></div>
+            <div class="row"><span>Salah</span><span><code>shake</code> 😵</span></div>
+            <div class="row"><span>Ganti Level</span><span><code>dropdown ↑</code></span></div>
+            <div class="row"><span>Rekor</span><span>tersimpan di <code>localStorage</code></span></div>
+          </div>
+          <p style="margin-top:12px">Tips: gunakan <b>mouse</b> atau <b>tap</b>. Fokus ke pola posisi angka yang sering muncul.</p>
+        </aside>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">Nice! Rekor baru 🎉</div>
+
+<script>
+(() => {
+  // ===== Utility =====
+  const $ = (s, o=document)=>o.querySelector(s);
+  const $$ = (s, o=document)=>[...o.querySelectorAll(s)];
+  const rand = (min,max)=>Math.floor(Math.random()*(max-min+1))+min;
+  const shuffle = (arr)=>{ for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]] } return arr };
+
+  // ===== Elements =====
+  const levelSel = $('#level');
+  const targetEl = $('#target');
+  const timeEl = $('#time');
+  const bestEl = $('#best');
+  const board = $('#board');
+  const btnStart = $('#btnStart');
+  const toast = $('#toast');
+  const bg = $('#bg');
+
+  // ===== Game State =====
+  const levels = {
+    1: { max:20,  cols:5, rows:4, theme:'day'   },
+    2: { max:30,  cols:6, rows:5, theme:'night' },
+    3: { max:40,  cols:7, rows:6, theme:'rainbow' },
+    4: { max:50,  cols:8, rows:7, theme:'balloon' },
+    5: { max:60,  cols:8, rows:8, theme:'final' }
+  };
+  let seqNext = 1, maxN = 20;
+  let started = false, startTime = 0, timerId = null;
+
+  // ===== Background Builder =====
+  function clearBG(){
+    $$('.cloud, .balloon, .star', bg).forEach(e=>e.remove());
+  }
+  function buildClouds(n=6){
+    for(let i=0;i<n;i++){
+      const c=document.createElement('div');
+      c.className='cloud';
+      const w=rand(120,240), h=rand(48,80);
+      c.style.width=w+'px'; c.style.height=h+'px';
+      c.style.top=rand(5,85)+'vh';
+      c.style.left=rand(-110,-10)+'%';
+      c.style.setProperty('--dur', rand(30,60)+'s');
+      bg.appendChild(c);
+    }
+  }
+  function buildBalloons(n=5){
+    const colors=['#F87171','#FBBF24','#34D399','#60A5FA','#A78BFA','#F472B6'];
+    for(let i=0;i<n;i++){
+      const b=document.createElement('div');
+      b.className='balloon';
+      b.style.setProperty('--bcol', colors[rand(0,colors.length-1)]);
+      b.style.left=rand(5,95)+'vw';
+      b.style.top=rand(20,80)+'vh';
+      b.style.animationDelay = (Math.random()*3)+'s';
+      bg.appendChild(b);
+    }
+  }
+  function buildStars(n=40){
+    for(let i=0;i<n;i++){
+      const s=document.createElement('div');
+      s.className='star';
+      s.style.left=rand(2,98)+'vw';
+      s.style.top=rand(4,46)+'vh';
+      s.style.animationDelay=(Math.random()*2)+'s';
+      s.style.opacity = Math.random()*.9 + .1;
+      bg.appendChild(s);
+    }
+  }
+  function applyTheme(theme){
+    // Reset base decorations visibility
+    $('.sun')?.style.setProperty('display', theme==='night' ? 'none':'block');
+    $('.rainbow')?.style.setProperty('display', (theme==='rainbow'||theme==='final') ? 'block':'none');
+    clearBG();
+    buildClouds(theme==='night' ? 3 : 6);
+    if(theme==='balloon' || theme==='final') buildBalloons(10);
+    if(theme==='night') buildStars(60);
+  }
+
+  // ===== Grid =====
+  function buildGrid(cfg){
+    const {max, cols, rows} = cfg;
+    maxN = max; seqNext = 1; targetEl.textContent = '1';
+    board.classList.remove('shake');
+    board.innerHTML='';
+    board.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+    board.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+
+    const nums = shuffle(Array.from({length:max}, (_,i)=>i+1));
+    nums.forEach(n=>{
+      const cell = document.createElement('button');
+      cell.type='button';
+      cell.className='cell';
+      cell.textContent=n;
+      cell.setAttribute('aria-label',`angka ${n}`);
+      cell.addEventListener('click', ()=> onCellClick(cell, n));
+      board.appendChild(cell);
+    });
+
+    stopTimer(true); // reset display
+  }
+
+  // ===== Timer =====
+  function startTimer(){
+    started = true;
+    startTime = performance.now();
+    timerId = setInterval(()=>{
+      const t = (performance.now() - startTime)/1000;
+      timeEl.textContent = t.toFixed(3);
+    }, 25);
+  }
+  function stopTimer(reset=false){
+    if(timerId){ clearInterval(timerId); timerId=null; }
+    if(reset){ timeEl.textContent = '0.000'; started=false; }
+  }
+
+  // ===== Sound (simple WebAudio pop) =====
+  const audioCtx = 'AudioContext' in window ? new AudioContext() : null;
+  function popSound(ok=true){
+    if(!audioCtx) return;
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type='triangle';
+    o.frequency.value = ok ? 660 : 220;
+    g.gain.value = .0001;
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start();
+    const now = audioCtx.currentTime;
+    g.gain.exponentialRampToValueAtTime(.2, now+0.01);
+    g.gain.exponentialRampToValueAtTime(.0001, now+0.08);
+    o.stop(now+0.1);
+  }
+
+  // ===== Confetti =====
+  function confettiBurst(n=80){
+    for(let i=0;i<n;i++){
+      const c = document.createElement('div');
+      c.className='confetti';
+      const x = (Math.random()*100 - 50) + 'vw';
+      c.style.left = (50 + (Math.random()*40 - 20)) +'vw';
+      c.style.background = `hsl(${Math.random()*360}, 85%, 60%)`;
+      c.style.setProperty('--x', x);
+      c.style.setProperty('--t', (2 + Math.random()*1.6)+'s');
+      c.style.transform = `translate3d(0,0,0)`;
+      document.body.appendChild(c);
+      c.addEventListener('animationend', ()=>c.remove());
+    }
+  }
+
+  function showToast(text){
+    toast.textContent = text;
+    toast.classList.add('show');
+    setTimeout(()=>toast.classList.remove('show'), 1800);
+  }
+
+  // ===== Best Time Storage =====
+  function keyForLevel(lvl){ return `nr_best_${lvl}` }
+  function loadBest(lvl){
+    const v = localStorage.getItem(keyForLevel(lvl));
+    return v ? parseFloat(v) : null;
+  }
+  function saveBest(lvl, t){
+    const best = loadBest(lvl);
+    if(best==null || t < best){
+      localStorage.setItem(keyForLevel(lvl), String(t.toFixed(3)));
+      return true;
+    }
+    return false;
+  }
+  function renderBest(lvl){
+    const best = loadBest(lvl);
+    bestEl.textContent = best ? `${best.toFixed(3)}s` : '—';
+  }
+
+  // ===== Interaction =====
+  function onCellClick(cell, n){
+    if(!started){
+      // resume audio context on first user gesture
+      audioCtx?.resume?.();
+      startTimer();
+    }
+    if(n === seqNext){
+      cell.classList.add('correct');
+      cell.disabled = true;
+      seqNext++;
+      targetEl.textContent = seqNext <= maxN ? seqNext : '✔';
+
+      popSound(true);
+
+      if(seqNext > maxN){
+        // finished!
+        stopTimer();
+        const t = parseFloat(timeEl.textContent);
+        const lvl = parseInt(levelSel.value,10);
+        const isBest = saveBest(lvl, t);
+        renderBest(lvl);
+        confettiBurst(100);
+        if(isBest) showToast('Keren! Rekor baru 🎉');
+        else showToast('Selesai! Mantap ✅');
+      }
+    } else {
+      // wrong
+      popSound(false);
+      board.classList.remove('shake');
+      void board.offsetWidth; // reflow for re-trigger animation
+      board.classList.add('shake');
+      cell.classList.add('wrong');
+      setTimeout(()=>cell.classList.remove('wrong'), 220);
+    }
+  }
+
+  function startGame(){
+    const lvl = parseInt(levelSel.value,10);
+    const cfg = levels[lvl];
+    applyTheme(cfg.theme);
+    buildGrid(cfg);
+    renderBest(lvl);
+  }
+
+  // ===== Bindings =====
+  btnStart.addEventListener('click', startGame);
+  levelSel.addEventListener('change', startGame);
+
+  // ===== Initial =====
+  // decorate background initially
+  applyTheme(levels[1].theme);
+  buildGrid(levels[1]);
+  renderBest(1);
+
+})();
+</script>
+</body>
+</html>
