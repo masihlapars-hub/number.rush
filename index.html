@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Number Rush — Sky Chaos v2</title>
+<title>Number Rush — Sky Chaos</title>
 <meta http-equiv="Cache-Control" content="no-store, max-age=0"/>
 <style>
   :root{ --ink:#0f172a; --muted:#334155; --line:rgba(255,255,255,.35); --p1:#7c3aed; --p2:#a78bfa; --ok:#22c55e; --err:#ef4444; }
@@ -19,7 +19,7 @@
     overflow:auto;
   }
 
-  /* BACKGROUND */
+  /* BACKGROUND (belakang) */
   .bg-back{position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden}
   .sun{position:absolute; right:4vw; top:4vh; width:110px; height:110px; border-radius:50%;
        background:#ffd166; box-shadow:0 0 70px #ffd166bb, inset -14px -16px 0 #ffc43d; animation:pulse 4s ease-in-out infinite}
@@ -66,7 +66,10 @@
   @keyframes boardGlow{0%,100%{box-shadow: inset 0 0 0 2px rgba(255,255,255,.18), 0 18px 36px rgba(0,0,0,.12)}50%{box-shadow: inset 0 0 0 2px rgba(255,255,255,.5), 0 26px 60px rgba(0,0,0,.2)}}
   .cell{
     display:grid; place-items:center; background:#fff; border:1px solid #e5e7eb; border-radius:12px; font-weight:900;
-    font-size: clamp(16px, 3.6cqi, 28px); user-select:none; cursor:pointer; transition: transform .08s ease, box-shadow .12s ease, background .12s ease;
+    /* FIX FONT SUPAYA NGGAK NGILANG DI HP */
+    font-size: clamp(16px, 3vmin, 28px);
+    color:#0f172a;
+    user-select:none; cursor:pointer; transition: transform .08s ease, box-shadow .12s ease, background .12s ease;
     box-shadow:0 8px 16px rgba(15,23,42,.12)
   }
   .cell:hover{ box-shadow:0 14px 24px rgba(15,23,42,.18) }
@@ -75,7 +78,7 @@
   .shake{ animation:shake .28s linear }
   @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 
-  /* EFEK DEPAN */
+  /* EFEK DEPAN (burung, layangan, bintang jatuh) */
   .fx-front{ position:absolute; inset:0; z-index:5; pointer-events:none; overflow:hidden; }
   .bird{
     position:absolute; width:34px; height:24px; animation:birdFly var(--bd,9s) linear forwards; opacity:.95;
@@ -110,7 +113,7 @@
   }
   @keyframes shoot{from{transform:translate(100vw,-10vh) rotate(-20deg)} to{transform:translate(-20vw,60vh) rotate(-20deg)}}
 
-  /* Overlay chaos */
+  /* Overlay CHAOS */
   .flash{position:absolute; inset:-10%; background:#fff; opacity:0; animation:flash .28s ease forwards; mix-blend-mode:overlay}
   @keyframes flash{0%{opacity:0} 30%{opacity:.9} 100%{opacity:0}}
   .mist{position:absolute; inset:-10%; background:radial-gradient(ellipse at var(--x,50%) var(--y,50%), rgba(255,255,255,.5), transparent 60%); filter:blur(6px); animation:mist 1.2s ease forwards}
@@ -129,6 +132,7 @@
 </style>
 </head>
 <body>
+  <!-- BACKGROUND -->
   <div class="bg-back" aria-hidden="true" id="bg"><div class="sun"></div></div>
 
   <div class="wrap">
@@ -137,7 +141,7 @@
         <div class="logo">NR</div>
         <div>
           <h1>Number Rush — <b>Sky Chaos</b></h1>
-          <div class="sub">FX depan nonjok + musik. Tambahan: <b>Mode CHAOS</b>, level 1–10, & kesulitan baru.</div>
+          <div class="sub">FX depan nonjok + musik. <b>CHAOS</b>, level 1–10, & difficulty lengkap.</div>
         </div>
       </header>
 
@@ -182,6 +186,7 @@
 
           <div class="board-wrap">
             <div id="board" class="board"></div>
+            <!-- LAYER EFEK DEPAN -->
             <div class="fx-front" id="fxFront" aria-hidden="true"></div>
           </div>
         </div>
@@ -190,12 +195,12 @@
           <h3 class="title">Aturan cepat</h3>
           <div class="list">
             <div class="row"><span>Countdown</span><span class="tag">habis → game over</span></div>
-            <div class="row"><span>Combo</span><span class="tag">capai N cepat → +3s (N tergantung difficulty)</span></div>
+            <div class="row"><span>Combo</span><span class="tag">capai N cepat → +3s (N sesuai difficulty)</span></div>
             <div class="row"><span>Hard</span><span class="tag">penalti -3s, N=6</span></div>
             <div class="row"><span>Flash</span><span class="tag">angka blackout periodik</span></div>
             <div class="row"><span>Swap</span><span class="tag">dua angka tukar posisi</span></div>
             <div class="row"><span>Sudden Death</span><span class="tag">salah sekali → tamat</span></div>
-            <div class="row"><span>CHAOS</span><span class="tag">FX 3× + shake/flash/kabut</span></div>
+            <div class="row"><span>CHAOS</span><span class="tag">FX 3× + flash/kabut/shake</span></div>
           </div>
         </aside>
       </div>
@@ -230,17 +235,17 @@
     7:{max:80, cols:10, rows:8, time:75},
     8:{max:90, cols:10, rows:9, time:80},
     9:{max:100, cols:10, rows:10, time:90},
-    10:{max:100, cols:10, rows:10, time:75} // versi cepat
+    10:{max:100, cols:10, rows:10, time:75}
   };
 
-  // state
+  // ===== STATE =====
   let seq=1, maxN=20, started=false, deadline=0, ticker=null, remaining=0;
   let lastHit=0, combo=0, chaos=false;
   let penaltyWrong=2, comboNeed=5, sudden=false;
   let ivBird, ivKite, ivShoot, ivFlash, ivMist, ivShake, ivSwap, ivBlackout;
   const audioCtx='AudioContext' in window ? new AudioContext() : null;
 
-  /* ===== background ===== */
+  /* ===== BACK SKY ===== */
   function buildBackSky(){
     BG.innerHTML='<div class="sun"></div>';
     for(let i=0;i<8;i++){
@@ -253,7 +258,7 @@
     }
   }
 
-  /* ===== FX depan ===== */
+  /* ===== FOREGROUND FX ===== */
   function spawnBird(leftToRight=true){
     const b=document.createElement('div'); b.className='bird';
     b.style.top=rand(8,85)+'%'; b.style.setProperty('--bd', (chaos?5.5:8.5)+'s');
@@ -282,11 +287,10 @@
   }
   function stopFX(){ [ivBird,ivKite,ivShoot,ivFlash,ivMist,ivShake].forEach(x=>x&&clearInterval(x)); }
 
-  /* ===== Grid ===== */
+  /* ===== GRID ===== */
   function buildGrid(cfg){
     const {max, cols, rows, time}=cfg;
     maxN=max; seq=1; targetEl.textContent='1'; combo=0; comboEl.textContent='0';
-    // columns/rows
     board.classList.remove('shake'); board.innerHTML='';
     board.style.gridTemplateColumns=`repeat(${cols}, 1fr)`; board.style.gridTemplateRows=`repeat(${rows}, 1fr)`;
     const arr=shuffle(Array.from({length:max},(_,i)=>i+1));
@@ -299,7 +303,7 @@
     remaining=time; timeEl.textContent=remaining.toFixed(3);
     stopTicker(true);
 
-    // difficulty specific intervals
+    // difficulty timers
     stopDifficultyTimers();
     const d=diffSel.value;
     if(d==='flash'){ // blackout semua angka periodik
@@ -312,17 +316,16 @@
       ivSwap=setInterval(()=>{
         const cells=[...board.querySelectorAll('.cell')].filter(c=>!c.disabled);
         if(cells.length<2) return;
-        const a=cells[rand(0,cells.length-1)], b=cells[rand(0,cells.length-1)];
+        const a=cells[Math.floor(Math.random()*cells.length)];
+        const b=cells[Math.floor(Math.random()*cells.length)];
         if(a===b) return;
         const ta=a.textContent; a.textContent=b.textContent; b.textContent=ta;
       }, d==='swap' ? 2600 : 3800);
     }
   }
-
   function stopDifficultyTimers(){ [ivSwap,ivBlackout].forEach(x=>x&&clearInterval(x)); }
 
-  /* ===== Timer ===== */
-  let ticker=null;
+  /* ===== TIMER ===== */
   function startTicker(){
     started=true; deadline=performance.now()+remaining*1000;
     ticker=setInterval(()=>{
@@ -333,7 +336,7 @@
   }
   function stopTicker(reset=false){ if(ticker){clearInterval(ticker); ticker=null} if(reset) started=false }
 
-  /* ===== SFX ===== */
+  /* ===== AUDIO SFX ===== */
   function pop(ok=true){
     if(!audioCtx) return;
     const o=audioCtx.createOscillator(), g=audioCtx.createGain();
@@ -353,13 +356,13 @@
   }
   function toastMsg(t){ toast.textContent=t; toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'), 1800) }
 
-  /* ===== Rekor ===== */
+  /* ===== REKOR ===== */
   const key=(lvl,df)=>`nr_best_${lvl}_${df}`;
   const loadBest=(lvl,df)=>{const v=localStorage.getItem(key(lvl,df)); return v?parseFloat(v):null};
   const saveBest=(lvl,df,val)=>{const b=loadBest(lvl,df); if(b==null||val<b){localStorage.setItem(key(lvl,df), String(val.toFixed(3))); return true} return false};
   const renderBest=(lvl,df)=>{const b=loadBest(lvl,df); bestEl.textContent=b?`${b.toFixed(3)}s`:'—'};
 
-  /* ===== Difficulty rules ===== */
+  /* ===== DIFFICULTY ===== */
   function applyDifficulty(){
     const d=diffSel.value;
     penaltyWrong=2; comboNeed=5; sudden=false;
@@ -368,7 +371,7 @@
     comboNeedEl.textContent=comboNeed;
   }
 
-  /* ===== Gameplay ===== */
+  /* ===== GAMEPLAY ===== */
   function penalize(sec){ if(sec<=0) return; remaining=Math.max(0, remaining-sec); chipTime.classList.add('warn'); setTimeout(()=>chipTime.classList.remove('warn'), 260); }
   function addTime(sec){ remaining+=sec; deadline+=sec*1000; toastMsg(`Bonus +${sec}s ⏱️`); }
 
@@ -396,24 +399,21 @@
   }
   function gameOver(){ toastMsg('Game Over! ⏰'); board.querySelectorAll('.cell').forEach(c=>c.disabled=true); }
 
-  /* ===== Start/reset ===== */
+  /* ===== START / RESET ===== */
   function start(){
     const lvl=parseInt(levelSel.value,10), cfg=levels[lvl];
     applyDifficulty();
     buildBackSky(); buildGrid(cfg); renderBest(lvl, diffSel.value); startFX();
-    // mode level 10 (rapat): kecilkan gap
-    if(lvl===10){ board.style.gap='6px'; }
-    else { board.style.gap='8px'; }
+    if(lvl===10){ board.style.gap='6px'; } else { board.style.gap='8px'; }
   }
 
-  /* ===== Music ===== */
+  /* ===== MUSIC ===== */
   bgm.volume=0.3;
-  function tryPlayMusic(){ bgm.play().then(()=>{ musicBtn.textContent='Music: ON'; musicBtn.dataset.off='0'; }).catch(()=>{ document.body.addEventListener('click', unlockMusic, {once:true}); }); }
-  function unlockMusic(){ bgm.play().then(()=>{ musicBtn.textContent='Music: ON'; musicBtn.dataset.off='0'; }); }
+  function tryPlayMusic(){ bgm.play().then(()=>{ musicBtn.textContent='Music: ON'; musicBtn.dataset.off='0'; }).catch(()=>{ document.body.addEventListener('click', ()=>bgm.play(), {once:true}); }); }
   window.addEventListener('load', tryPlayMusic);
   musicBtn.addEventListener('click', ()=>{ if(bgm.paused){ bgm.play().catch(()=>{}); musicBtn.textContent='Music: ON'; musicBtn.dataset.off='0'; } else { bgm.pause(); bgm.currentTime=0; musicBtn.textContent='Music: OFF'; musicBtn.dataset.off='1'; } });
 
-  /* ===== Bind UI ===== */
+  /* ===== BIND UI ===== */
   btn.addEventListener('click', start);
   levelSel.addEventListener('change', start);
   diffSel.addEventListener('change', start);
