@@ -1,16 +1,14 @@
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Number Rush — Sky Glass Challenge</title>
+<title>Number Rush — Sky Glass SHOWTIME</title>
 <style>
   :root{
     --bg1:#c9e7ff; --bg2:#ffd7f2; --bg3:#fff5d6;
-    --ink:#0f172a; --muted:#64748b; --line:rgba(255,255,255,.35);
-    --primary:#7c3aed; --primary2:#a78bfa;
-    --ok:#22c55e; --err:#ef4444;
+    --ink:#0f172a; --muted:#475569; --line:rgba(255,255,255,.35);
+    --primary:#7c3aed; --primary2:#a78bfa; --ok:#22c55e; --err:#ef4444;
   }
   *{box-sizing:border-box}
   html,body{height:100%}
@@ -27,91 +25,126 @@
     overflow:auto;
   }
 
-  /* ===== BACKGROUND: selalu bergerak ===== */
+  /* ===== BACKGROUND: OVERKILL & TERLIHAT ===== */
   .bg{position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden}
-  .sun{position:absolute; right:4vw; top:4vh; width:96px; height:96px; border-radius:50%;
-       background:#ffd166; box-shadow:0 0 46px #ffd166aa, inset -12px -14px 0 #ffc43d; animation:pulse 4s ease-in-out infinite}
-  @keyframes pulse{0%,100%{transform:scale(1)} 50%{transform:scale(1.05)}}
+  /* aurora gelombang */
+  .aurora{
+    position:absolute; inset:-20% -20% auto -20%; height:70%;
+    background:
+      radial-gradient(60% 140% at 20% 60%, #a78bfa55 0%, transparent 60%),
+      radial-gradient(60% 140% at 60% 40%, #22c55e44 0%, transparent 60%),
+      radial-gradient(60% 140% at 90% 70%, #60a5fa44 0%, transparent 60%);
+    mix-blend-mode: screen;
+    animation: auroraMove 16s linear infinite;
+  }
+  @keyframes auroraMove{ 0%{transform:translateY(0) rotate(0)} 50%{transform:translateY(-6%) rotate(3deg)} 100%{transform:translateY(0) rotate(0)} }
+
+  /* gradient berputar halus */
+  .halo{
+    position:absolute; inset:-30%; background:
+      conic-gradient(from 0deg, #ffffff00 0 20deg, #ffffff22 120deg, #ffffff00 160deg, #ffffff22 240deg, #ffffff00 280deg);
+    filter:blur(20px); animation: spin 20s linear infinite;
+  }
+  @keyframes spin{ to{ transform:rotate(360deg)} }
+
+  .sun{position:absolute; right:4vw; top:4vh; width:110px; height:110px; border-radius:50%;
+       background:#ffd166; box-shadow:0 0 60px #ffd166aa, inset -14px -16px 0 #ffc43d; animation:pulse 4s ease-in-out infinite}
+  @keyframes pulse{0%,100%{transform:scale(1)} 50%{transform:scale(1.06)}}
+
   .layer{position:absolute; inset:0}
-  .cloud{position:absolute; background:#fff; border-radius:60px; filter:drop-shadow(0 10px 24px rgba(0,0,0,.12))}
+  .cloud{position:absolute; background:#fff; border-radius:60px; filter:drop-shadow(0 10px 24px rgba(0,0,0,.16))}
   .cloud:before,.cloud:after{content:""; position:absolute; background:#fff; border-radius:80px}
   .cloud:before{width:70%; height:70%; left:-25%; top:10%}
   .cloud:after{width:55%; height:55%; right:-20%; top:20%}
-  @keyframes drift-slow{from{transform:translateX(-130%)} to{transform:translateX(130%)}}
-  @keyframes drift-fast{from{transform:translateX(120%)} to{transform:translateX(-120%)}}
-  .l1 .cloud{animation:drift-slow var(--t,60s) linear infinite; opacity:.95}
-  .l2 .cloud{animation:drift-fast var(--t,42s) linear infinite; opacity:.82}
-  .balloon{position:absolute; width:44px; height:58px; border-radius:50% 50% 45% 45%/60% 60% 40% 40%;
-           background:radial-gradient(70% 90% at 35% 20%, #fff6, transparent), var(--col,#ff7ab6);
-           box-shadow:0 10px 20px rgba(0,0,0,.2); animation:float 5.5s ease-in-out infinite, sway 4s ease-in-out infinite}
-  .balloon:after{content:""; position:absolute; left:50%; bottom:-10px; width:2px; height:24px; background:#6b7280; transform:translateX(-50%)}
-  @keyframes float{0%,100%{transform:translateY(0)} 50%{transform:translateY(-18px)}}
-  @keyframes sway{0%,100%{margin-left:0} 50%{margin-left:8px}}
-  .star{position:absolute; width:4px; height:4px; background:#fff; border-radius:50%; box-shadow:0 0 8px #fff8}
+  @keyframes driftRight{from{transform:translateX(-140%)} to{transform:translateX(140%)}}
+  @keyframes driftLeft {from{transform:translateX(130%)} to{transform:translateX(-130%)}}
+  .l1 .cloud{animation:driftRight var(--t,58s) linear infinite; opacity:.95}
+  .l2 .cloud{animation:driftLeft  var(--t,36s) linear infinite; opacity:.85}
+  .l3 .cloud{animation:driftRight var(--t,80s) linear infinite; opacity:.75; filter:drop-shadow(0 14px 30px rgba(0,0,0,.18))}
+
+  /* balon parade melintas */
+  .balloon{
+    position:absolute; width:52px; height:68px; border-radius:50% 50% 45% 45%/60% 60% 40% 40%;
+    background:radial-gradient(70% 90% at 35% 20%, #fff6, transparent), var(--col,#ff7ab6);
+    box-shadow:0 12px 24px rgba(0,0,0,.22);
+    animation: float 5.5s ease-in-out infinite, parade 22s linear infinite;
+  }
+  @keyframes float{0%,100%{transform:translateY(0)} 50%{transform:translateY(-20px)}}
+  @keyframes parade{ from{ left:-15vw } to{ left:115vw } }
+  .balloon:after{content:""; position:absolute; left:50%; bottom:-12px; width:2px; height:28px; background:#6b7280; transform:translateX(-50%)}
+
+  .star{position:absolute; width:5px; height:5px; background:#fff; border-radius:50%; box-shadow:0 0 10px #fff}
   @keyframes twinkle{0%,100%{opacity:.2; transform:scale(.6)} 50%{opacity:1; transform:scale(1)}}
 
-  /* hembusan angin garis tipis */
-  .wind{position:absolute; top:0; width:120px; height:2px; background:linear-gradient(90deg,transparent,#ffffffaa,transparent);
-        filter:blur(.3px); opacity:.8; animation:blow var(--tw,5s) linear forwards}
+  /* wind streaks sering */
+  .wind{position:absolute; top:0; width:160px; height:2px; background:linear-gradient(90deg,transparent,#ffffffdd,transparent);
+        filter:blur(.2px); opacity:.9; animation:blow var(--tw,4.2s) linear forwards}
   @keyframes blow{from{transform:translate(-20vw, var(--y))} to{transform:translate(120vw, var(--y))}}
 
-  /* ===== GLASS LAYOUT ===== */
+  /* sparkles */
+  .sparkle{position:absolute; width:6px; height:6px; border-radius:50%; background:#fff; box-shadow:0 0 10px 3px #fff;
+           animation: sparkle 1.4s ease-in-out forwards}
+  @keyframes sparkle{0%{opacity:0; transform:scale(.6)} 40%{opacity:1; transform:scale(1)} 100%{opacity:0; transform:scale(.4)}}
+
+  /* ===== GLASS UI ===== */
   .wrap{position:relative; z-index:1; display:grid; place-items:center; min-height:calc(100svh - 24px)}
-  .card{width:min(1120px,100%); background:rgba(255,255,255,.45); backdrop-filter: blur(16px) saturate(140%);
-        border:1px solid var(--line); border-radius:18px; box-shadow:0 16px 40px rgba(15,23,42,.18); overflow:hidden}
+  .card{
+    width:min(1120px,100%);
+    background:rgba(255,255,255,.28);       /* lebih transparan */
+    backdrop-filter: blur(10px) saturate(160%);
+    border:1px solid var(--line);
+    border-radius:18px;
+    box-shadow:0 18px 46px rgba(15,23,42,.22);
+    overflow:hidden;
+  }
   header{display:flex; gap:12px; align-items:center; padding:14px 16px; border-bottom:1px solid var(--line);
-         background:linear-gradient(180deg, rgba(255,255,255,.6), rgba(255,255,255,.35)); backdrop-filter: blur(10px)}
+         background:linear-gradient(180deg, rgba(255,255,255,.38), rgba(255,255,255,.22))}
   .logo{width:30px; height:30px; display:grid; place-items:center; border-radius:10px; color:#fff; font-weight:800;
         background:conic-gradient(from 120deg, var(--primary), var(--primary2))}
   header h1{font-size:18px; margin:0}
-  .sub{font-size:12px; color:var(--muted)}
+  .sub{font-size:12px; color:#334155}
   .content{display:grid; gap:14px; padding:14px}
   @media (min-width:980px){ .content{ grid-template-columns: 1.15fr .85fr; } }
-  .panel{background:rgba(255,255,255,.5); border:1px solid var(--line); border-radius:16px; padding:14px;
-         box-shadow:0 10px 24px rgba(15,23,42,.08); backdrop-filter: blur(14px) saturate(160%)}
-
-  /* HUD */
+  .panel{background:rgba(255,255,255,.24); border:1px solid var(--line); border-radius:16px; padding:14px; backdrop-filter: blur(10px)}
   .hud{display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between; margin-bottom:10px}
   .stats{display:flex; gap:10px; flex-wrap:wrap}
-  .chip{background:rgba(255,255,255,.65); border:1px solid var(--line); padding:8px 10px; border-radius:999px; font-size:13px; display:flex; gap:8px; align-items:center; backdrop-filter: blur(10px)}
+  .chip{background:rgba(255,255,255,.55); border:1px solid var(--line); padding:8px 10px; border-radius:999px; font-size:13px; display:flex; gap:8px; align-items:center}
   .chip b{font-variant-numeric:tabular-nums}
-  .chip.warn{box-shadow:0 0 0 3px #fecaca88}
+  .chip.warn{box-shadow:0 0 0 3px #fecacaaa}
   select{border:1px solid var(--line); background:rgba(255,255,255,.9); padding:8px 10px; border-radius:10px; font-weight:600}
   .btn{appearance:none; border:0; background:linear-gradient(180deg, var(--primary), var(--primary2)); color:#fff; padding:10px 14px; border-radius:12px; font-weight:700; cursor:pointer; box-shadow:0 12px 26px rgba(124,58,237,.35)}
   .btn:active{transform:translateY(1px) scale(.99)}
+  .toggle{appearance:none; border:1px solid var(--line); background:rgba(255,255,255,.5); padding:8px 10px; border-radius:10px; font-weight:700; cursor:pointer}
 
-  /* BOARD dengan animasi gradient */
+  /* BOARD benar2 transparan (sel tetap solid) + efek glow bernafas */
   .board-wrap{display:grid; place-items:center}
   .board{
     width:100%; max-width:100%;
-    block-size:min(72svh, 76vw);
-    aspect-ratio:1/1;
-    background:
-      radial-gradient(60% 60% at 50% 40%, #ffffffcc, transparent 60%),
-      linear-gradient(180deg,#f9fafbcc,#f3f4f6cc);
-    background-size:200% 200%;
-    animation:breath 6s ease-in-out infinite;
-    border:1px solid rgba(229,231,235,.8);
-    border-radius:14px; display:grid; gap:8px; padding:10px; overflow:hidden; backdrop-filter: blur(6px)
+    block-size:min(72svh, 76vw); aspect-ratio:1/1;
+    background: transparent;
+    border:1px solid rgba(255,255,255,.4);
+    border-radius:14px; display:grid; gap:8px; padding:10px; overflow:hidden;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.18), 0 12px 26px rgba(0,0,0,.08);
+    animation:boardGlow 6s ease-in-out infinite;
   }
-  @keyframes breath{0%,100%{background-position:50% 40%} 50%{background-position:50% 60%}}
-  .cell{display:grid; place-items:center; background:#fff; border:1px solid #e5e7eb; border-radius:12px; font-weight:800;
-        font-size: clamp(16px, 3.6cqi, 28px); user-select:none; cursor:pointer; transition:transform .08s ease, box-shadow .12s ease, background .12s ease;
-        box-shadow:0 6px 14px rgba(15,23,42,.08)}
-  .cell:hover{ box-shadow:0 10px 20px rgba(15,23,42,.12) }
+  @keyframes boardGlow{0%,100%{box-shadow: inset 0 0 0 1px rgba(255,255,255,.18), 0 12px 26px rgba(0,0,0,.08)} 50%{box-shadow: inset 0 0 0 1px rgba(255,255,255,.38), 0 18px 36px rgba(0,0,0,.12)}}
+  .cell{
+    display:grid; place-items:center; background:#fff; border:1px solid #e5e7eb; border-radius:12px; font-weight:800;
+    font-size: clamp(16px, 3.6cqi, 28px); user-select:none; cursor:pointer; transition:transform .08s ease, box-shadow .12s ease, background .12s ease;
+    box-shadow:0 6px 14px rgba(15,23,42,.1)
+  }
+  .cell:hover{ box-shadow:0 12px 20px rgba(15,23,42,.14) }
   .cell.correct{ background:#ecfdf5; border-color:#bbf7d0 }
   .cell.wrong{ background:#fef2f2; border-color:#fecaca }
   .shake{ animation:shake .28s linear }
   @keyframes shake{0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)}}
 
-  /* Sidebar */
   .title{font-weight:800; margin:0 0 6px}
-  .sidebar p{margin:6px 0; color:var(--muted); font-size:14px}
+  .sidebar p{margin:6px 0; color:#334155; font-size:14px}
   .list{display:grid; gap:8px}
-  .row{display:flex; justify-content:space-between; align-items:center; padding:8px 10px; border:1px dashed var(--line); border-radius:10px; background:rgba(255,255,255,.45); backdrop-filter: blur(8px)}
+  .row{display:flex; justify-content:space-between; align-items:center; padding:8px 10px; border:1px dashed var(--line); border-radius:10px; background:rgba(255,255,255,.28)}
   .tag{font-size:12px; padding:4px 8px; border-radius:999px; background:#eef2ff; color:#4338ca; border:1px solid #e0e7ff}
 
-  /* Toast & Confetti */
   .toast{position:fixed; left:50%; bottom:18px; transform:translateX(-50%) translateY(60px); opacity:0; background:#111827; color:#fff; padding:10px 14px; border-radius:12px; box-shadow:0 10px 24px rgba(0,0,0,.2); z-index:3; transition: transform .25s ease, opacity .25s ease; font-size:14px}
   .toast.show{transform:translateX(-50%) translateY(0); opacity:1}
   .confetti{position:fixed; top:-10px; width:9px; height:14px; border-radius:2px; opacity:.95; pointer-events:none; z-index:2; animation:fall var(--t,2.6s) linear forwards}
@@ -119,9 +152,12 @@
 </style>
 </head>
 <body>
-  <!-- BACKGROUND -->
+  <!-- BACKGROUND LAYERS -->
   <div class="bg" aria-hidden="true">
+    <div class="halo"></div>
+    <div class="aurora"></div>
     <div class="sun"></div>
+    <div class="layer l3" id="l3"></div>
     <div class="layer l1" id="l1"></div>
     <div class="layer l2" id="l2"></div>
   </div>
@@ -131,8 +167,8 @@
       <header>
         <div class="logo">NR</div>
         <div>
-          <h1>Number Rush — Sky Glass <span class="tag" style="font-size:11px; padding:3px 6px; margin-left:6px; background:#ecfeff; color:#0369a1; border:1px solid #a5f3fc; border-radius:999px;">Challenge</span></h1>
-          <div class="sub">Tema transparan. Animasi konstan. Ada <b>countdown</b>, <b>combo</b>, dan <b>penalti</b> waktu.</div>
+          <h1>Number Rush — Sky Glass <span class="tag" style="font-size:11px; padding:3px 6px; margin-left:6px; background:#ecfeff; color:#0369a1; border:1px solid #a5f3fc; border-radius:999px;">SHOWTIME</span></h1>
+          <div class="sub">Transparan, animasi **ditonjolkan** (aurora, parallax cloud, balon parade, wind, sparkles).</div>
         </div>
       </header>
 
@@ -155,7 +191,10 @@
               <div class="chip">Rekor: <b id="best">—</b></div>
               <div class="chip">Combo: <b id="combo">0</b>/5</div>
             </div>
-            <button class="btn" id="btnStart">Mulai / Ulang</button>
+            <div style="display:flex; gap:8px; align-items:center">
+              <button class="toggle" id="toggleChaos">Chaos: OFF</button>
+              <button class="btn" id="btnStart">Mulai / Ulang</button>
+            </div>
           </div>
 
           <div class="board-wrap">
@@ -165,14 +204,14 @@
 
         <!-- RIGHT -->
         <aside class="panel sidebar">
-          <h3 class="title">Cara Main</h3>
-          <p>Klik angka dari <b>kecil → besar</b>. Waktu <b>mundur</b> mulai saat klik pertama.</p>
+          <h3 class="title">Aturan cepat</h3>
           <div class="list">
+            <div class="row"><span>Countdown</span><span class="tag">habis → game over</span></div>
             <div class="row"><span>Combo</span><span class="tag">5 cepat → +3s</span></div>
-            <div class="row"><span>Salah</span><span class="tag">-2s & shake 😵</span></div>
-            <div class="row"><span>Rekor</span><span class="tag">per level</span></div>
+            <div class="row"><span>Salah</span><span class="tag">-2s & shake</span></div>
+            <div class="row"><span>Chaos Mode</span><span class="tag">grid goyang & angka geser</span></div>
           </div>
-          <p style="margin-top:10px">Animasi awan, balon, bintang & hembusan angin jalan terus biar makin hidup.</p>
+          <p style="margin-top:10px">Animasi jalan **nonstop** di belakang. Panel transparan sengaja biar animasi nongol jelas.</p>
         </aside>
       </div>
     </div>
@@ -185,11 +224,13 @@
   const $=(s,o=document)=>o.querySelector(s);
   const rand=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
   const shuffle=(a)=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
-  const levelSel=$('#level'), targetEl=$('#target'), timeEl=$('#time'), bestEl=$('#best'), chipTime=$('#chipTime'),
-        board=$('#board'), btn=$('#btnStart'), toast=$('#toast'), comboEl=$('#combo');
-  const L1=$('#l1'), L2=$('#l2');
 
-  // Level config: jumlah angka, grid, tema, dan batas waktu (detik)
+  const levelSel=$('#level'), targetEl=$('#target'), timeEl=$('#time'), bestEl=$('#best'),
+        chipTime=$('#chipTime'), board=$('#board'), btn=$('#btnStart'),
+        toast=$('#toast'), comboEl=$('#combo'), chaosBtn=$('#toggleChaos');
+
+  const L1=$('#l1'), L2=$('#l2'), L3=$('#l3');
+
   const levels={
     1:{max:20, cols:5, rows:4, theme:'day',     time:25},
     2:{max:30, cols:6, rows:5, theme:'night',   time:35},
@@ -198,44 +239,56 @@
     5:{max:60, cols:8, rows:8, theme:'final',   time:65}
   };
 
-  // State
   let seq=1, maxN=20, started=false, deadline=0, ticker=null, remaining=0;
-  let lastHit=0, combo=0; // combo logic
+  let lastHit=0, combo=0, chaos=false, chaosTimer=null;
   const audioCtx='AudioContext' in window ? new AudioContext() : null;
 
-  /* ===== BACKGROUND ===== */
-  function clearBG(){ L1.innerHTML=''; L2.innerHTML=''; }
-  function mkCloud(parent, size=1, y=[12,80], fromLeft=true){
+  /* ===== BACKGROUND BUILD (padat & jelas) ===== */
+  function clearBG(){ L1.innerHTML=''; L2.innerHTML=''; L3.innerHTML=''; }
+  function mkCloud(parent, size=1, y=[12,80], fromLeft=true, slow=58){
     const c=document.createElement('div'); c.className='cloud';
-    c.style.width=(120*size)+'px'; c.style.height=(56*size)+'px';
+    c.style.width=(140*size)+'px'; c.style.height=(62*size)+'px';
     c.style.top=rand(y[0],y[1])+'vh';
-    c.style.left=fromLeft? rand(-120,-20)+'%' : rand(120,200)+'%';
-    c.style.setProperty('--t', (fromLeft? rand(48,68):rand(34,48))+'s');
+    c.style.left=fromLeft? rand(-140,-30)+'%' : rand(130,210)+'%';
+    c.style.animation = fromLeft ? `driftRight ${slow}s linear infinite` : `driftLeft ${slow-20}s linear infinite`;
     parent.appendChild(c);
   }
-  function mkBalloon(){
-    const b=document.createElement('div'); b.className='balloon';
-    const colors=['#ff7ab6','#ffd166','#34d399','#60a5fa','#a78bfa','#f472b6'];
-    b.style.setProperty('--col', colors[rand(0,colors.length-1)]);
-    b.style.left=rand(6,94)+'vw'; b.style.top=rand(20,70)+'vh';
-    b.style.animationDelay=(Math.random()*2)+'s';
-    L2.appendChild(b);
+  function mkBalloonRow(){
+    const colors=['#ff7ab6','#ffd166','#34d399','#60a5fa','#a78bfa','#f472b6','#fb7185'];
+    for(let i=0;i<6;i++){
+      const b=document.createElement('div'); b.className='balloon';
+      b.style.setProperty('--col', colors[i%colors.length]);
+      b.style.top=rand(15,75)+'vh';
+      b.style.left='-15vw';
+      b.style.animationDelay=(i*2)+'s';
+      L2.appendChild(b);
+    }
   }
-  function mkStar(){ const s=document.createElement('div'); s.className='star'; s.style.left=rand(2,98)+'vw'; s.style.top=rand(4,40)+'vh'; s.style.animation='twinkle '+(2+Math.random()*2)+'s ease-in-out infinite'; L1.appendChild(s); }
-  function mkWind(){ // garis angin melintas terus
+  function mkStar(){ const s=document.createElement('div'); s.className='star'; s.style.left=rand(2,98)+'vw'; s.style.top=rand(4,45)+'vh'; s.style.animation='twinkle '+(1.8+Math.random()*1.6)+'s ease-in-out infinite'; L1.appendChild(s); }
+  function mkWind(){
     const w=document.createElement('div'); w.className='wind';
-    w.style.setProperty('--y', rand(10,80)+'vh'); w.style.setProperty('--tw', (4+Math.random()*2)+'s');
-    L2.appendChild(w); w.addEventListener('animationend', ()=>w.remove());
+    w.style.setProperty('--y', rand(8,88)+'vh'); w.style.setProperty('--tw', (3.6+Math.random()*1.2)+'s');
+    (Math.random()<.5?L1:L2).appendChild(w); w.addEventListener('animationend', ()=>w.remove());
   }
-  setInterval(mkWind, 700); // hembusan rutin
+  function mkSparkle(){
+    const sp=document.createElement('div'); sp.className='sparkle';
+    sp.style.left=rand(5,95)+'vw'; sp.style.top=rand(8,60)+'vh';
+    (Math.random()<.5?L1:L2).appendChild(sp); sp.addEventListener('animationend', ()=>sp.remove());
+  }
+
+  setInterval(mkWind, 450);     // banyak
+  setInterval(mkSparkle, 700);  // banyak juga
 
   function themeBuild(theme){
     clearBG();
-    for(let i=0;i<7;i++) mkCloud(L1, 1, [12,78], true);
-    for(let i=0;i<6;i++) mkCloud(L2, .85,[18,80], false);
-    if(theme==='night'){ for(let i=0;i<80;i++) mkStar(); $('.sun').style.display='none'; }
+    // layer belakang besar
+    for(let i=0;i<5;i++) mkCloud(L3, 1.3, [10,70], true, 90);
+    // layer tengah & depan
+    for(let i=0;i<7;i++) mkCloud(L1, 1, [12,78], true, 58);
+    for(let i=0;i<7;i++) mkCloud(L2, .9,[18,82], false, 38);
+    if(theme==='night'){ for(let i=0;i<90;i++) mkStar(); $('.sun').style.display='none'; }
     else { $('.sun').style.display='block'; }
-    if(theme==='balloon'||theme==='final'){ for(let i=0;i<12;i++) mkBalloon(); }
+    if(theme==='balloon'||theme==='final'){ mkBalloonRow(); }
   }
 
   /* ===== GRID ===== */
@@ -251,36 +304,48 @@
       c.addEventListener('click',()=>onClick(c,n));
       board.appendChild(c);
     });
-    // reset waktu
     remaining=time; timeEl.textContent=remaining.toFixed(3);
     stopTicker(true);
+    if(chaos){ startChaos(); }
   }
 
-  /* ===== TIMER (countdown) ===== */
+  /* ===== TIMER COUNTDOWN ===== */
   function startTicker(){
     started=true; deadline=performance.now()+remaining*1000;
     ticker=setInterval(()=>{
-      remaining=(deadline-performance.now())/1000;
-      if(remaining<0) remaining=0;
+      remaining=(deadline-performance.now())/1000; if(remaining<0) remaining=0;
       timeEl.textContent=remaining.toFixed(3);
       if(remaining===0){ stopTicker(); gameOver(); }
     }, 25);
   }
-  function stopTicker(reset=false){ if(ticker){clearInterval(ticker); ticker=null} if(reset){ started=false } }
+  function stopTicker(reset=false){ if(ticker){clearInterval(ticker); ticker=null} if(reset) started=false }
 
-  /* ===== AUDIO ===== */
+  /* ===== CHAOS MODE ===== */
+  function startChaos(){
+    stopChaos();
+    chaosTimer=setInterval(()=>{
+      // guncang board sebentar
+      board.classList.add('shake'); setTimeout(()=>board.classList.remove('shake'), 260);
+      // geser posisi 6 angka secara acak
+      const cells=[...board.querySelectorAll('.cell:not([disabled])')];
+      for(let i=0;i<6 && cells.length>1;i++){
+        const a=rand(0,cells.length-1); const b=rand(0,cells.length-1);
+        if(a!==b){ board.insertBefore(cells[a], cells[b]); }
+      }
+    }, 5000);
+  }
+  function stopChaos(){ if(chaosTimer){ clearInterval(chaosTimer); chaosTimer=null } }
+
+  /* ===== AUDIO POP ===== */
   function pop(ok=true){
-    if(!audioCtx) return;
-    const o=audioCtx.createOscillator(), g=audioCtx.createGain();
-    o.type='triangle'; o.frequency.value=ok?720:220; g.gain.value=.0001;
-    o.connect(g); g.connect(audioCtx.destination); o.start();
-    const t=audioCtx.currentTime;
-    g.gain.exponentialRampToValueAtTime(.24, t+.01);
-    g.gain.exponentialRampToValueAtTime(.0001, t+.09);
-    o.stop(t+.11);
+    const ctx=audioCtx; if(!ctx) return;
+    const o=ctx.createOscillator(), g=ctx.createGain();
+    o.type='triangle'; o.frequency.value=ok?740:200; g.gain.value=.0001;
+    o.connect(g); g.connect(ctx.destination); o.start();
+    const t=ctx.currentTime; g.gain.exponentialRampToValueAtTime(.26, t+.01); g.gain.exponentialRampToValueAtTime(.0001, t+.1); o.stop(t+.12);
   }
 
-  /* ===== CONFETTI & TOAST ===== */
+  /* ===== EFFECTS ===== */
   function confetti(n=140){
     for(let i=0;i<n;i++){
       const e=document.createElement('div'); e.className='confetti';
@@ -288,8 +353,7 @@
       e.style.background=`hsl(${Math.random()*360}, 90%, 60%)`;
       e.style.setProperty('--x', (Math.random()*100 - 50)+'vw');
       e.style.setProperty('--t', (2+Math.random()*1.8)+'s');
-      document.body.appendChild(e);
-      e.addEventListener('animationend', ()=>e.remove());
+      document.body.appendChild(e); e.addEventListener('animationend', ()=>e.remove());
     }
   }
   function toastMsg(t){ toast.textContent=t; toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'), 1800) }
@@ -301,48 +365,31 @@
   const renderBest=(lvl)=>{const b=loadBest(lvl); bestEl.textContent=b?`${b.toFixed(3)}s`:'—'};
 
   /* ===== GAMEPLAY ===== */
-  function penalize(sec){
-    remaining=Math.max(0, remaining-sec);
-    chipTime.classList.add('warn');
-    setTimeout(()=>chipTime.classList.remove('warn'), 300);
-  }
-  function addTime(sec){
-    remaining+=sec; deadline+=sec*1000;
-    toastMsg(`Bonus waktu +${sec}s ⏱️`);
-  }
+  function penalize(sec){ remaining=Math.max(0, remaining-sec); chipTime.classList.add('warn'); setTimeout(()=>chipTime.classList.remove('warn'), 300); }
+  function addTime(sec){ remaining+=sec; deadline+=sec*1000; toastMsg(`Bonus +${sec}s ⏱️`); }
 
   function onClick(cell,n){
     if(!started){ audioCtx?.resume?.(); startTicker(); lastHit=performance.now(); }
     if(n===seq){
       cell.classList.add('correct'); cell.disabled=true; seq++; targetEl.textContent= seq<=maxN? seq : '✔'; pop(true);
-
-      // Combo check (≤ 900ms antar klik)
       const now=performance.now();
       if(now - lastHit <= 900){ combo++; } else { combo=1; }
-      lastHit=now;
-      comboEl.textContent=String(combo>5?5:combo);
+      lastHit=now; comboEl.textContent=String(Math.min(combo,5));
       if(combo>=5){ addTime(3); combo=0; comboEl.textContent='0'; }
-
       if(seq>maxN){
-        stopTicker();
-        const timeUsed = (levels[parseInt(levelSel.value,10)].time - remaining);
-        const isBest=saveBest(parseInt(levelSel.value,10), timeUsed);
-        renderBest(parseInt(levelSel.value,10));
-        confetti(160);
-        toastMsg(isBest?'Rekor baru! 🎉':'Selesai! ✅');
+        stopTicker(); const used=levels[parseInt(levelSel.value,10)].time - remaining;
+        const isBest=saveBest(parseInt(levelSel.value,10), used); renderBest(parseInt(levelSel.value,10));
+        confetti(180); toastMsg(isBest?'Rekor baru! 🎉':'Selesai! ✅');
       }
     } else {
-      pop(false);
-      board.classList.remove('shake'); void board.offsetWidth; board.classList.add('shake');
+      pop(false); board.classList.remove('shake'); void board.offsetWidth; board.classList.add('shake');
       cell.classList.add('wrong'); setTimeout(()=>cell.classList.remove('wrong'),220);
-      penalize(2); // -2 detik
-      if(remaining===0){ stopTicker(); gameOver(); }
+      penalize(2); if(remaining===0){ stopTicker(); gameOver(); }
     }
   }
 
   function gameOver(){
     toastMsg('Waktu habis! ⏰');
-    // disable all cells
     board.querySelectorAll('.cell').forEach(c=>c.disabled=true);
   }
 
@@ -353,8 +400,12 @@
 
   btn.addEventListener('click', start);
   levelSel.addEventListener('change', start);
+  chaosBtn.addEventListener('click', ()=>{
+    chaos=!chaos; chaosBtn.textContent = `Chaos: ${chaos?'ON':'OFF'}`;
+    if(chaos) startChaos(); else stopChaos();
+  });
 
-  /* init */
+  // INIT
   themeBuild(levels[1].theme); buildGrid(levels[1]); renderBest(1);
 })();
 </script>
