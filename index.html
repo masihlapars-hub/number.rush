@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Number Rush — Sky Chaos (All Difficulties + Fair Chaos+)</title>
+<title>Number Rush — Sky Chaos</title>
 <meta http-equiv="Cache-Control" content="no-store, max-age=0"/>
 <style>
   :root{ --ink:#0f172a; --muted:#334155; --line:rgba(255,255,255,.35); --p1:#7c3aed; --p2:#a78bfa; --ok:#22c55e; --err:#ef4444; }
@@ -79,7 +79,7 @@
   .no-numbers .cell{ color:transparent; text-shadow:none }
   .cell.peek{ color:inherit !important }
 
-  /* Chaos+ warning blink & target highlight */
+  /* Chaos+ warning & target */
   .board.warn { box-shadow: inset 0 0 0 2px rgba(99,102,241,.9), 0 22px 44px rgba(0,0,0,.18); transition: box-shadow .25s ease; }
   .cell.is-target { box-shadow: 0 0 0 2px rgba(34,197,94,.6) inset; }
 
@@ -180,7 +180,7 @@
             <div class="row"><span>Countdown</span><span class="tag">habis → game over</span></div>
             <div class="row"><span>Combo</span><span class="tag">capai N cepat → bonus</span></div>
             <div class="row"><span>Salah</span><span class="tag">penalti / sudden-death / reverse</span></div>
-            <div class="row"><span>Chaos+</span><span class="tag">swap posisi ubin (adil)</span></div>
+            <div class="row"><span>Chaos+</span><span class="tag">swap posisi ubin (lebih cepat)</span></div>
           </div>
         </aside>
       </div>
@@ -288,38 +288,37 @@
     board.appendChild(frag);
 
     const df=diffs[diffSel.value];
-    // Flash: sembunyikan setelah preview
+    // Flash
     if(df && df.flash){ flashTimer=setTimeout(()=> board.classList.add('no-numbers'), df.previewMs||1000); }
-    // Blink: toggle no-numbers berkala
+    // Blink
     if(df && df.blink){
       const range=df.blinkMs||[900,1200];
       blinkTimer=setInterval(()=>{ board.classList.toggle('no-numbers'); }, rand(range[0], range[1]));
     }
-    // Chaos+: SWAP POSISI UBIN (adil)
+    // Chaos+ — FASTER (interval pendek & swap banyak), tetap fair (swap posisi, bukan angka)
     if(df && df.chaos){
       const base=df.chaosMs||[3000,5000];
-      const period=storm? Math.max(900, (base[0]+base[1])/4) : rand(base[0], base[1]);
+      const randomBase = rand(base[0], base[1]);
+      const rate = storm ? 0.35 : 0.6;                    // << dipercepat
+      const period = Math.max(350, Math.floor(randomBase * rate)); // minimal 350ms
+
       chaosTimer=setInterval(()=>{
-        // jangan saat user baru tap
-        if(performance.now()-lastTapAt<500) return;
+        if(performance.now()-lastTapAt<500) return; // jeda aman setelah tap
 
         const tiles=[...board.children];
-        // target yang sedang dicari
         const currentTarget=(diffs[diffSel.value]?.reverse ? (maxN - seq + 1) : seq);
         const targetTile=tiles.find(el=>el.textContent===String(currentTarget));
 
-        // highlight target
         tiles.forEach(el=>el.classList.remove('is-target'));
         if(targetTile) targetTile.classList.add('is-target');
 
-        // kandidat: ubin belum benar, bukan target
         const cand=tiles.filter(el=>!el.disabled && el!==targetTile);
         if(cand.length<2) return;
 
         board.classList.add('warn');
         setTimeout(()=>board.classList.remove('warn'), 220);
 
-        const swaps=rand(2,4); // 2–4 pasang (4–8 ubin)
+        const swaps=rand(3,6); // << lebih banyak: 3–6 pasang (6–12 ubin)
         for(let i=0;i<swaps;i++){
           const a=cand[rand(0,cand.length-1)];
           const b=cand[rand(0,cand.length-1)];
