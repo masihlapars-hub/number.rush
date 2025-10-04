@@ -62,11 +62,12 @@
     border:1px solid rgba(255,255,255,.45);
     box-shadow: inset 0 0 0 2px rgba(255,255,255,.18), 0 18px 36px rgba(0,0,0,.12);
     animation: boardGlow 3.5s ease-in-out infinite;
+    transition: transform .25s ease; /* untuk Mirror Flip */
   }
   @keyframes boardGlow{0%,100%{box-shadow: inset 0 0 0 2px rgba(255,255,255,.18), 0 18px 36px rgba(0,0,0,.12)}50%{box-shadow: inset 0 0 0 2px rgba(255,255,255,.5), 0 26px 60px rgba(0,0,0,.2)}}
   .cell{
     display:grid; place-items:center; background:#fff; border:1px solid #e5e7eb; border-radius:12px; font-weight:900;
-    font-size: clamp(14px, 3.2cqi, 22px); user-select:none; cursor:pointer; transition: transform .08s ease, box-shadow .12s ease, background .12s ease, color .15s ease;
+    font-size: clamp(14px, 3.2cqi, 22px); user-select:none; cursor:pointer; transition: transform .08s ease, box-shadow .12s ease, background .12s ease, color .15s ease, opacity .15s ease;
     box-shadow:0 8px 16px rgba(15,23,42,.12)
   }
   .cell:hover{ box-shadow:0 14px 24px rgba(15,23,42,.18) }
@@ -75,13 +76,21 @@
   .shake{ animation:shake .28s linear }
   @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 
-  /* Flash & Blink */
+  /* Flash (angka disembunyikan global, peek saat tekan) */
   .no-numbers .cell{ color:transparent; text-shadow:none }
   .cell.peek{ color:inherit !important }
 
   /* Chaos+ warning & target */
   .board.warn { box-shadow: inset 0 0 0 2px rgba(99,102,241,.9), 0 22px 44px rgba(0,0,0,.18); transition: box-shadow .25s ease; }
   .cell.is-target { box-shadow: 0 0 0 2px rgba(34,197,94,.6) inset; }
+
+  /* Fog Mode: kabut global, angka jelas saat hover/peek */
+  .fog .cell { color:transparent; opacity:.75 }
+  .fog .cell:hover, .fog .cell.peek { color:inherit; opacity:1 }
+
+  /* Mirror Flip classes */
+  .mirX { transform: scaleX(-1); }
+  .rot180 { transform: rotate(180deg); }
 
   /* FX depan board */
   .fx-front{ position:absolute; inset:0; z-index:5; pointer-events:none; overflow:hidden; }
@@ -146,14 +155,14 @@
               <div class="chip">Difficulty:
                 <select id="difficulty">
                   <option value="normal">Normal</option>
-                  <option value="easy">Easy</option>
-                  <option value="hard">Hard</option>
-                  <option value="insane">Insane</option>
                   <option value="flash">Flash</option>
                   <option value="sudden">Sudden Death</option>
                   <option value="reverse">Reverse</option>
-                  <option value="blink">Blink</option>
                   <option value="chaos">Chaos+</option>
+                  <option value="fog">Fog 🌫️</option>
+                  <option value="timebomb">Time Bomb 💣</option>
+                  <option value="gravity">Gravity 🪂</option>
+                  <option value="mirror">Mirror Flip 🪞</option>
                 </select>
               </div>
               <div class="chip">Target: <b id="target">1</b></div>
@@ -179,8 +188,8 @@
           <div class="list">
             <div class="row"><span>Countdown</span><span class="tag">habis → game over</span></div>
             <div class="row"><span>Combo</span><span class="tag">capai N cepat → bonus</span></div>
-            <div class="row"><span>Salah</span><span class="tag">penalti / sudden-death / reverse</span></div>
-            <div class="row"><span>Chaos+</span><span class="tag">swap posisi ubin (lebih cepat)</span></div>
+            <div class="row"><span>Salah</span><span class="tag">penalti / sudden-death / bomb</span></div>
+            <div class="row"><span>Chaos+</span><span class="tag">swap posisi ubin (adil)</span></div>
           </div>
         </aside>
       </div>
@@ -193,12 +202,12 @@
 
 <script>
 (()=> {
-  /* UTIL */
+  /* ===== UTIL ===== */
   const $=(s,o=document)=>o.querySelector(s);
   const rand=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
   const shuffle=(a)=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
 
-  /* ELEMENTS */
+  /* ===== ELEMENTS ===== */
   const levelSel=$('#level'), diffSel=$('#difficulty'),
         targetEl=$('#target'), timeEl=$('#time'), bestEl=$('#best'),
         comboEl=$('#combo'), comboNeedEl=$('#comboNeed'),
@@ -207,7 +216,7 @@
         musicBtn=$('#toggleMusic'), toast=$('#toast'),
         BG=$('#bg'), FX=$('#fxFront'), bgm=$('#bgm');
 
-  /* LEVELS (1–20 … 1–100) */
+  /* ===== LEVELS ===== */
   const levels={
     1:{max:20,  cols:5,  rows:4,  time:25},
     2:{max:40,  cols:8,  rows:5,  time:35},
@@ -216,26 +225,29 @@
     5:{max:100, cols:10, rows:10, time:65}
   };
 
-  /* DIFFICULTY PRESET */
+  /* ===== DIFFICULTIES ===== */
   const diffs={
-    easy   : { need:4, window:1100, bonus:4,   penalty:1.5 },
-    normal : { need:5, window: 900, bonus:3,   penalty:2   },
-    hard   : { need:6, window: 800, bonus:2,   penalty:2.5 },
-    insane : { need:7, window: 700, bonus:1.5, penalty:3   },
-    flash  : { need:5, window: 900, bonus:3,   penalty:2,   flash:true,  previewMs:1200 },
-    sudden : { need:5, window: 900, bonus:3,   penalty:0,   sudden:true },
-    reverse: { need:5, window: 900, bonus:3,   penalty:2,   reverse:true },
-    blink  : { need:5, window: 900, bonus:3,   penalty:2,   blink:true,  blinkMs:[800,1200] },
-    chaos  : { need:5, window: 900, bonus:3,   penalty:2,   chaos:true,  chaosMs:[3000,5000] }
+    normal : { need:5, window:900, bonus:3,   penalty:2 },
+    flash  : { need:5, window:900, bonus:3,   penalty:2,   flash:true,  previewMs:1200 },
+    sudden : { need:5, window:900, bonus:3,   penalty:0,   sudden:true },
+    reverse: { need:5, window:900, bonus:3,   penalty:2,   reverse:true },
+    chaos  : { need:5, window:900, bonus:3,   penalty:2,   chaos:true,  chaosMs:[3000,5000] },
+
+    /* NEW */
+    fog     : { need:5, window:900, bonus:3,   penalty:2,   fog:true },
+    timebomb: { need:5, window:900, bonus:3,   penalty:2,   bombDivisor:7, bombPenalty:5 },
+    gravity : { need:5, window:900, bonus:3,   penalty:2,   gravity:true, gravityMs:[2500,3800] },
+    mirror  : { need:5, window:900, bonus:3,   penalty:2,   mirror:true,  mirrorMs:[3500,5200] }
   };
 
-  /* STATE */
+  /* ===== STATE ===== */
   let seq=1, maxN=20, started=false, deadline=0, ticker=null, remaining=0;
-  let lastHit=0, combo=0, storm=false, flashTimer=null, blinkTimer=null, chaosTimer=null;
-  let lastTapAt=0; // anti-shuffle saat user tap
+  let lastHit=0, combo=0, storm=false;
+  let flashTimer=null, chaosTimer=null, gravityTimer=null, mirrorTimer=null;
+  let lastTapAt=0; // cegah shuffle tepat saat user tap
   const audioCtx='AudioContext' in window ? new AudioContext() : null;
 
-  /* BACK SKY */
+  /* ===== BACK SKY ===== */
   function buildBackSky(){
     BG.innerHTML='<div class="sun"></div>';
     for(let i=0;i<8;i++){
@@ -247,7 +259,7 @@
     }
   }
 
-  /* FX depan board */
+  /* ===== FX depan board ===== */
   function spawnBird(leftToRight=true){
     const b=document.createElement('div'); b.className='bird';
     b.style.top=rand(8,85)+'%'; b.style.setProperty('--bd', (storm?6:9)+'s');
@@ -260,14 +272,15 @@
   function startFX(){ stopFX(); ivBird=setInterval(()=>spawnBird(Math.random()>.5), storm?1400:2400); ivKite=setInterval(spawnKite, storm?2800:4600); ivShoot=setInterval(spawnShoot, storm?2800:5200); }
   function stopFX(){ [ivBird,ivKite,ivShoot].forEach(x=>x&&clearInterval(x)); }
 
-  /* GRID */
+  /* ===== GRID ===== */
   function buildGrid(cfg){
     const {max, cols, rows, time}=cfg;
     maxN=max; seq=1; targetEl.textContent='1'; combo=0; comboEl.textContent='0';
-    board.classList.remove('shake','no-numbers','warn'); board.innerHTML='';
+    board.classList.remove('shake','no-numbers','warn','fog','mirX','rot180'); board.innerHTML='';
     if(flashTimer){clearTimeout(flashTimer); flashTimer=null}
-    if(blinkTimer){clearInterval(blinkTimer); blinkTimer=null}
     if(chaosTimer){clearInterval(chaosTimer); chaosTimer=null}
+    if(gravityTimer){clearInterval(gravityTimer); gravityTimer=null}
+    if(mirrorTimer){clearInterval(mirrorTimer); mirrorTimer=null}
 
     board.style.gridTemplateColumns=`repeat(${cols}, 1fr)`;
     board.style.gridTemplateRows=`repeat(${rows}, 1fr)`;
@@ -288,37 +301,32 @@
     board.appendChild(frag);
 
     const df=diffs[diffSel.value];
-    // Flash
-    if(df && df.flash){ flashTimer=setTimeout(()=> board.classList.add('no-numbers'), df.previewMs||1000); }
-    // Blink
-    if(df && df.blink){
-      const range=df.blinkMs||[900,1200];
-      blinkTimer=setInterval(()=>{ board.classList.toggle('no-numbers'); }, rand(range[0], range[1]));
+
+    /* Flash */
+    if(df && df.flash){
+      flashTimer=setTimeout(()=> board.classList.add('no-numbers'), df.previewMs||1000);
     }
-    // Chaos+ — FASTER (interval pendek & swap banyak), tetap fair (swap posisi, bukan angka)
+
+    /* Fog */
+    if(df && df.fog){ board.classList.add('fog'); }
+
+    /* Chaos+ — fair swap posisi ubin (bukan angka), interval lebih cepat */
     if(df && df.chaos){
       const base=df.chaosMs||[3000,5000];
       const randomBase = rand(base[0], base[1]);
-      const rate = storm ? 0.35 : 0.6;                    // << dipercepat
-      const period = Math.max(350, Math.floor(randomBase * rate)); // minimal 350ms
-
+      const rate = storm ? 0.35 : 0.6;                      // dipercepat
+      const period = Math.max(350, Math.floor(randomBase * rate));
       chaosTimer=setInterval(()=>{
-        if(performance.now()-lastTapAt<500) return; // jeda aman setelah tap
-
+        if(performance.now()-lastTapAt<500) return;
         const tiles=[...board.children];
         const currentTarget=(diffs[diffSel.value]?.reverse ? (maxN - seq + 1) : seq);
         const targetTile=tiles.find(el=>el.textContent===String(currentTarget));
-
         tiles.forEach(el=>el.classList.remove('is-target'));
         if(targetTile) targetTile.classList.add('is-target');
-
         const cand=tiles.filter(el=>!el.disabled && el!==targetTile);
         if(cand.length<2) return;
-
-        board.classList.add('warn');
-        setTimeout(()=>board.classList.remove('warn'), 220);
-
-        const swaps=rand(3,6); // << lebih banyak: 3–6 pasang (6–12 ubin)
+        board.classList.add('warn'); setTimeout(()=>board.classList.remove('warn'), 220);
+        const swaps=rand(3,6);
         for(let i=0;i<swaps;i++){
           const a=cand[rand(0,cand.length-1)];
           const b=cand[rand(0,cand.length-1)];
@@ -331,11 +339,69 @@
       }, period);
     }
 
+    /* Gravity — “jatuh” kolom secara periodik */
+    if(df && df.gravity){
+      const range=df.gravityMs||[2600,3800];
+      const period = storm ? Math.max(900, Math.floor((range[0]+range[1])/4)) : rand(range[0], range[1]);
+      gravityTimer=setInterval(()=>{
+        if(performance.now()-lastTapAt<400) return;
+        const tiles=[...board.children];
+        const cols=colsCount(), rows=rowsCount();
+        // Pilih 1–2 kolom untuk “jatuh”
+        const howMany=rand(1,2);
+        board.classList.add('warn'); setTimeout(()=>board.classList.remove('warn'), 200);
+        for(let k=0;k<howMany;k++){
+          const colIdx=rand(0, cols-1);
+          // ambil node pada kolom itu (urut dari atas ke bawah)
+          const colNodes=[];
+          for(let r=0;r<rows;r++){ const idx=r*cols+colIdx; colNodes.push(tiles[idx]); }
+          // jangan gerak ubin yang sudah benar (disabled) → skip kolom kalau semua disabled
+          if(colNodes.every(n=>n.disabled)) continue;
+          // rotasi 1 langkah: bawah ke atas (lewati yang disabled tetap di posisi)
+          let bottom = colNodes[colNodes.length-1];
+          for(let r=colNodes.length-1; r>0; r--){
+            const a = colNodes[r], b = colNodes[r-1];
+            if(a && b && !a.disabled && !b.disabled){
+              // swap urutan mereka di DOM relatif
+              const aIndex = tiles.indexOf(a), bIndex = tiles.indexOf(b);
+              if(aIndex>bIndex){
+                board.insertBefore(a, b); // a naik, b turun
+                [tiles[aIndex], tiles[bIndex]]=[tiles[bIndex], tiles[aIndex]];
+              }
+            }
+          }
+          // kecil efek random: kadang balikkan top & bottom kalau keduanya belum benar
+          if(colNodes[0] && bottom && !colNodes[0].disabled && !bottom.disabled){
+            const aIndex = [...board.children].indexOf(colNodes[0]);
+            const bIndex = [...board.children].indexOf(bottom);
+            if(aIndex<bIndex){
+              board.insertBefore(bottom, colNodes[0]);
+            } else {
+              board.insertBefore(colNodes[0], bottom.nextSibling);
+            }
+          }
+        }
+      }, period);
+
+      function colsCount(){ return parseInt(getComputedStyle(board).gridTemplateColumns.split(' ').length,10); }
+      function rowsCount(){ return parseInt(getComputedStyle(board).gridTemplateRows.split(' ').length,10); }
+    }
+
+    /* Mirror Flip — balik orientasi papan periodik */
+    if(df && df.mirror){
+      const range=df.mirrorMs||[3500,5200];
+      mirrorTimer=setInterval(()=>{
+        board.classList.add('warn'); setTimeout(()=>board.classList.remove('warn'), 220);
+        // random pilih flip horizontal atau rotasi 180
+        board.classList.toggle(Math.random()>.5 ? 'mirX' : 'rot180');
+      }, rand(range[0], range[1]));
+    }
+
     remaining=time; timeEl.textContent=remaining.toFixed(3);
     stopTicker(true);
   }
 
-  /* TIMER */
+  /* ===== TIMER ===== */
   function startTicker(){
     started=true; deadline=performance.now()+remaining*1000;
     ticker=setInterval(()=>{
@@ -346,7 +412,7 @@
   }
   function stopTicker(reset=false){ if(ticker){clearInterval(ticker); ticker=null} if(reset) started=false }
 
-  /* AUDIO POP */
+  /* ===== AUDIO POP ===== */
   function pop(ok=true){
     if(!audioCtx) return;
     const o=audioCtx.createOscillator(), g=audioCtx.createGain();
@@ -355,7 +421,7 @@
     const t=audioCtx.currentTime; g.gain.exponentialRampToValueAtTime(.26, t+.01); g.gain.exponentialRampToValueAtTime(.0001, t+.1); o.stop(t+.12);
   }
 
-  /* UI HELPERS */
+  /* ===== UI HELPERS ===== */
   function confetti(n=160){
     for(let i=0;i<n;i++){
       const e=document.createElement('div'); e.className='confetti';
@@ -368,17 +434,17 @@
   }
   function toastMsg(t){ toast.textContent=t; toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'), 1800) }
 
-  /* REKOR */
+  /* ===== REKOR ===== */
   const key=(lvl,df)=>`nr_best_${lvl}_${df}`;
   const loadBest=(lvl,df)=>{const v=localStorage.getItem(key(lvl,df)); return v?parseFloat(v):null};
   const saveBest=(lvl,df,val)=>{const b=loadBest(lvl,df); if(b==null||val<b){localStorage.setItem(key(lvl,df), String(val.toFixed(3))); return true} return false};
   const renderBest=(lvl,df)=>{const b=loadBest(lvl,df); bestEl.textContent=b?`${b.toFixed(3)}s`:'—'};
 
-  /* WAKTU */
+  /* ===== WAKTU ===== */
   function penalize(sec){ remaining=Math.max(0, remaining-sec); deadline=Math.max(performance.now(), deadline-sec*1000); chipTime.classList.add('warn'); setTimeout(()=>chipTime.classList.remove('warn'), 300); }
   function addTime(sec){ remaining+=sec; deadline+=sec*1000; toastMsg(`Bonus +${sec}s ⏱️`); }
 
-  /* GAMEPLAY */
+  /* ===== GAMEPLAY ===== */
   function onClick(cell,n){
     const df=diffs[diffSel.value]||diffs.normal;
 
@@ -411,19 +477,26 @@
       }
     } else {
       pop(false);
+      // Sudden Death?
       if(diffs[diffSel.value]?.sudden){
         stopTicker(); toastMsg('Salah → Sudden Death 💀'); board.querySelectorAll('.cell').forEach(c=>c.disabled=true); return;
       }
+      // Time Bomb: salah klik angka yang termasuk “bom”
+      if(df.bombDivisor && n % df.bombDivisor === 0){
+        penalize(df.bombPenalty || 5);
+        toastMsg('💣 Oops! Kena bom!');
+      } else {
+        penalize(df.penalty||2);
+      }
       board.classList.remove('shake'); void board.offsetWidth; board.classList.add('shake');
       cell.classList.add('wrong'); setTimeout(()=>cell.classList.remove('wrong'),220);
-      penalize(df.penalty||2);
       if(remaining===0){ stopTicker(); gameOver(); }
     }
   }
 
   function gameOver(){ toastMsg('Waktu habis! ⏰'); board.querySelectorAll('.cell').forEach(c=>c.disabled=true); }
 
-  /* START & EVENTS */
+  /* ===== START & EVENTS ===== */
   function start(){
     const lvl=parseInt(levelSel.value,10), cfg=levels[lvl], df=diffs[diffSel.value]||diffs.normal;
     buildBackSky(); buildGrid(cfg); renderBest(lvl, diffSel.value); startFX();
