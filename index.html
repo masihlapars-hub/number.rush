@@ -62,7 +62,7 @@
     border:1px solid rgba(255,255,255,.45);
     box-shadow: inset 0 0 0 2px rgba(255,255,255,.18), 0 18px 36px rgba(0,0,0,.12);
     animation: boardGlow 3.5s ease-in-out infinite;
-    transition: transform .25s ease; /* untuk Mirror Flip */
+    transition: transform .25s ease;
   }
   @keyframes boardGlow{0%,100%{box-shadow: inset 0 0 0 2px rgba(255,255,255,.18), 0 18px 36px rgba(0,0,0,.12)}50%{box-shadow: inset 0 0 0 2px rgba(255,255,255,.5), 0 26px 60px rgba(0,0,0,.2)}}
   .cell{
@@ -76,7 +76,7 @@
   .shake{ animation:shake .28s linear }
   @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 
-  /* Flash (angka disembunyikan global, peek saat tekan) */
+  /* Flash: sembunyikan angka global (bisa peek) */
   .no-numbers .cell{ color:transparent; text-shadow:none }
   .cell.peek{ color:inherit !important }
 
@@ -84,13 +84,16 @@
   .board.warn { box-shadow: inset 0 0 0 2px rgba(99,102,241,.9), 0 22px 44px rgba(0,0,0,.18); transition: box-shadow .25s ease; }
   .cell.is-target { box-shadow: 0 0 0 2px rgba(34,197,94,.6) inset; }
 
-  /* Fog Mode: kabut global, angka jelas saat hover/peek */
-  .fog .cell { color:transparent; opacity:.75 }
-  .fog .cell:hover, .fog .cell.peek { color:inherit; opacity:1 }
-
-  /* Mirror Flip classes */
+  /* Mirror Flip */
   .mirX { transform: scaleX(-1); }
   .rot180 { transform: rotate(180deg); }
+
+  /* GLITCH MODE — efek distorsi kilat */
+  .glitching .cell{
+    text-shadow: 1px 0 rgba(0,255,255,.7), -1px 0 rgba(255,0,128,.7);
+    transform: translateX(0.5px) translateY(-0.5px);
+    filter: contrast(1.1) saturate(1.05);
+  }
 
   /* FX depan board */
   .fx-front{ position:absolute; inset:0; z-index:5; pointer-events:none; overflow:hidden; }
@@ -159,7 +162,7 @@
                   <option value="sudden">Sudden Death</option>
                   <option value="reverse">Reverse</option>
                   <option value="chaos">Chaos+</option>
-                  <option value="fog">Fog 🌫️</option>
+                  <option value="glitch">Glitch ⚡</option>
                   <option value="timebomb">Time Bomb 💣</option>
                   <option value="gravity">Gravity 🪂</option>
                   <option value="mirror">Mirror Flip 🪞</option>
@@ -233,17 +236,18 @@
     reverse: { need:5, window:900, bonus:3,   penalty:2,   reverse:true },
     chaos  : { need:5, window:900, bonus:3,   penalty:2,   chaos:true,  chaosMs:[3000,5000] },
 
-    /* NEW */
-    fog     : { need:5, window:900, bonus:3,   penalty:2,   fog:true },
+    /* NEW (replace Fog): */
+    glitch  : { need:5, window:900, bonus:3,   penalty:2,   glitch:true, glitchMs:[2600,4200], glitchBurst:260 },
+
     timebomb: { need:5, window:900, bonus:3,   penalty:2,   bombDivisor:7, bombPenalty:5 },
-    gravity : { need:5, window:900, bonus:3,   penalty:2,   gravity:true, gravityMs:[2500,3800] },
-    mirror  : { need:5, window:900, bonus:3,   penalty:2,   mirror:true,  mirrorMs:[3500,5200] }
+    gravity : { need:5, window:900, bonus:3,   penalty:2,   gravity:true,  gravityMs:[2500,3800] },
+    mirror  : { need:5, window:900, bonus:3,   penalty:2,   mirror:true,   mirrorMs:[3500,5200] }
   };
 
   /* ===== STATE ===== */
   let seq=1, maxN=20, started=false, deadline=0, ticker=null, remaining=0;
   let lastHit=0, combo=0, storm=false;
-  let flashTimer=null, chaosTimer=null, gravityTimer=null, mirrorTimer=null;
+  let flashTimer=null, chaosTimer=null, gravityTimer=null, mirrorTimer=null, glitchTimer=null, glitchOffTimer=null;
   let lastTapAt=0; // cegah shuffle tepat saat user tap
   const audioCtx='AudioContext' in window ? new AudioContext() : null;
 
@@ -276,11 +280,13 @@
   function buildGrid(cfg){
     const {max, cols, rows, time}=cfg;
     maxN=max; seq=1; targetEl.textContent='1'; combo=0; comboEl.textContent='0';
-    board.classList.remove('shake','no-numbers','warn','fog','mirX','rot180'); board.innerHTML='';
+    board.classList.remove('shake','no-numbers','warn','mirX','rot180','glitching'); board.innerHTML='';
     if(flashTimer){clearTimeout(flashTimer); flashTimer=null}
     if(chaosTimer){clearInterval(chaosTimer); chaosTimer=null}
     if(gravityTimer){clearInterval(gravityTimer); gravityTimer=null}
     if(mirrorTimer){clearInterval(mirrorTimer); mirrorTimer=null}
+    if(glitchTimer){clearInterval(glitchTimer); glitchTimer=null}
+    if(glitchOffTimer){clearTimeout(glitchOffTimer); glitchOffTimer=null}
 
     board.style.gridTemplateColumns=`repeat(${cols}, 1fr)`;
     board.style.gridTemplateRows=`repeat(${rows}, 1fr)`;
@@ -307,14 +313,11 @@
       flashTimer=setTimeout(()=> board.classList.add('no-numbers'), df.previewMs||1000);
     }
 
-    /* Fog */
-    if(df && df.fog){ board.classList.add('fog'); }
-
-    /* Chaos+ — fair swap posisi ubin (bukan angka), interval lebih cepat */
+    /* Chaos+ — fair swap posisi ubin (bukan angka), interval cepat */
     if(df && df.chaos){
       const base=df.chaosMs||[3000,5000];
       const randomBase = rand(base[0], base[1]);
-      const rate = storm ? 0.35 : 0.6;                      // dipercepat
+      const rate = storm ? 0.35 : 0.6;
       const period = Math.max(350, Math.floor(randomBase * rate));
       chaosTimer=setInterval(()=>{
         if(performance.now()-lastTapAt<500) return;
@@ -339,7 +342,7 @@
       }, period);
     }
 
-    /* Gravity — “jatuh” kolom secara periodik */
+    /* Gravity — “jatuh” kolom */
     if(df && df.gravity){
       const range=df.gravityMs||[2600,3800];
       const period = storm ? Math.max(900, Math.floor((range[0]+range[1])/4)) : rand(range[0], range[1]);
@@ -347,44 +350,26 @@
         if(performance.now()-lastTapAt<400) return;
         const tiles=[...board.children];
         const cols=colsCount(), rows=rowsCount();
-        // Pilih 1–2 kolom untuk “jatuh”
         const howMany=rand(1,2);
         board.classList.add('warn'); setTimeout(()=>board.classList.remove('warn'), 200);
         for(let k=0;k<howMany;k++){
           const colIdx=rand(0, cols-1);
-          // ambil node pada kolom itu (urut dari atas ke bawah)
           const colNodes=[];
           for(let r=0;r<rows;r++){ const idx=r*cols+colIdx; colNodes.push(tiles[idx]); }
-          // jangan gerak ubin yang sudah benar (disabled) → skip kolom kalau semua disabled
-          if(colNodes.every(n=>n.disabled)) continue;
-          // rotasi 1 langkah: bawah ke atas (lewati yang disabled tetap di posisi)
-          let bottom = colNodes[colNodes.length-1];
-          for(let r=colNodes.length-1; r>0; r--){
-            const a = colNodes[r], b = colNodes[r-1];
+          if(colNodes.every(n=>n && n.disabled)) continue;
+          // geser ke bawah 1 langkah (skip yang disabled)
+          for(let r=colNodes.length-1;r>0;r--){
+            const a=colNodes[r], b=colNodes[r-1];
             if(a && b && !a.disabled && !b.disabled){
-              // swap urutan mereka di DOM relatif
-              const aIndex = tiles.indexOf(a), bIndex = tiles.indexOf(b);
-              if(aIndex>bIndex){
-                board.insertBefore(a, b); // a naik, b turun
-                [tiles[aIndex], tiles[bIndex]]=[tiles[bIndex], tiles[aIndex]];
-              }
-            }
-          }
-          // kecil efek random: kadang balikkan top & bottom kalau keduanya belum benar
-          if(colNodes[0] && bottom && !colNodes[0].disabled && !bottom.disabled){
-            const aIndex = [...board.children].indexOf(colNodes[0]);
-            const bIndex = [...board.children].indexOf(bottom);
-            if(aIndex<bIndex){
-              board.insertBefore(bottom, colNodes[0]);
-            } else {
-              board.insertBefore(colNodes[0], bottom.nextSibling);
+              const aIdx=[...board.children].indexOf(a);
+              board.insertBefore(a, b);
             }
           }
         }
       }, period);
 
-      function colsCount(){ return parseInt(getComputedStyle(board).gridTemplateColumns.split(' ').length,10); }
-      function rowsCount(){ return parseInt(getComputedStyle(board).gridTemplateRows.split(' ').length,10); }
+      function colsCount(){ return getComputedStyle(board).gridTemplateColumns.split(' ').length; }
+      function rowsCount(){ return getComputedStyle(board).gridTemplateRows.split(' ').length; }
     }
 
     /* Mirror Flip — balik orientasi papan periodik */
@@ -392,8 +377,18 @@
       const range=df.mirrorMs||[3500,5200];
       mirrorTimer=setInterval(()=>{
         board.classList.add('warn'); setTimeout(()=>board.classList.remove('warn'), 220);
-        // random pilih flip horizontal atau rotasi 180
         board.classList.toggle(Math.random()>.5 ? 'mirX' : 'rot180');
+      }, rand(range[0], range[1]));
+    }
+
+    /* Glitch — distorsi kilat periodik (sangat singkat) */
+    if(df && df.glitch){
+      const range=df.glitchMs||[2600,4200];
+      const burst=df.glitchBurst||240; // durasi ON (ms)
+      glitchTimer=setInterval(()=>{
+        board.classList.add('glitching');
+        if(glitchOffTimer) clearTimeout(glitchOffTimer);
+        glitchOffTimer=setTimeout(()=>board.classList.remove('glitching'), burst);
       }, rand(range[0], range[1]));
     }
 
@@ -477,7 +472,6 @@
       }
     } else {
       pop(false);
-      // Sudden Death?
       if(diffs[diffSel.value]?.sudden){
         stopTicker(); toastMsg('Salah → Sudden Death 💀'); board.querySelectorAll('.cell').forEach(c=>c.disabled=true); return;
       }
