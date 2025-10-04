@@ -1,79 +1,128 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Number Rush — Sky Chaos</title>
-  <style>
-    :root{ --ink:#0f172a; --muted:#334155; --line:rgba(255,255,255,.35); --p1:#7c3aed; --p2:#a78bfa; --ok:#22c55e; --err:#ef4444; }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0; color:var(--ink);
-      font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,"Helvetica Neue",Arial;
-      background: linear-gradient(180deg,#bde0ff 0%,#a8d0ff 60%,#9bc8ff 100%);
-      min-height:100svh;
-      padding:max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right))
-              max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
-      overflow:auto;
-    }
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Number Rush — Sky Chaos</title>
+<meta http-equiv="Cache-Control" content="no-store, max-age=0"/>
+<style>
+  :root{ --ink:#0f172a; --muted:#334155; --line:rgba(255,255,255,.35); --p1:#7c3aed; --p2:#a78bfa; --ok:#22c55e; --err:#ef4444; }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; color:var(--ink);
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,"Helvetica Neue",Arial;
+    background: linear-gradient(180deg,#bde0ff 0%,#a8d0ff 60%,#9bc8ff 100%);
+    min-height:100svh;
+    padding:max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right))
+            max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+    overflow:auto;
+  }
 
-    /* Background */
-    .bg-back{position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden}
-    .sun{position:absolute; right:4vw; top:4vh; width:110px; height:110px; border-radius:50%;
-         background:#ffd166; box-shadow:0 0 70px #ffd166bb, inset -14px -16px 0 #ffc43d; animation:pulse 4s ease-in-out infinite}
-    @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
-    .bg-cloud{position:absolute; background:#fff; border-radius:60px; filter:drop-shadow(0 12px 26px rgba(0,0,0,.16))}
-    .bg-cloud:before,.bg-cloud:after{content:""; position:absolute; background:#fff; border-radius:80px}
-    .bg-cloud:before{width:70%; height:70%; left:-25%; top:10%}
-    .bg-cloud:after{width:55%; height:55%; right:-20%; top:20%}
-    @keyframes driftRight{from{transform:translateX(-150%)} to{transform:translateX(150%)}}
-    .bg-cloud{animation:driftRight var(--t,85s) linear infinite; opacity:.9}
+  /* ====== BACKGROUND (ANIMASI TETAP ADA) ====== */
+  .bg-back{position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden}
+  .sun{position:absolute; right:4vw; top:4vh; width:110px; height:110px; border-radius:50%;
+       background:#ffd166; box-shadow:0 0 70px #ffd166bb, inset -14px -16px 0 #ffc43d; animation:pulse 4s ease-in-out infinite}
+  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+  .bg-cloud{position:absolute; background:#fff; border-radius:60px; filter:drop-shadow(0 12px 26px rgba(0,0,0,.16))}
+  .bg-cloud:before,.bg-cloud:after{content:""; position:absolute; background:#fff; border-radius:80px}
+  .bg-cloud:before{width:70%; height:70%; left:-25%; top:10%}
+  .bg-cloud:after{width:55%; height:55%; right:-20%; top:20%}
+  @keyframes driftRight{from{transform:translateX(-150%)} to{transform:translateX(150%)}}
+  .bg-cloud{animation:driftRight var(--t,85s) linear infinite; opacity:.9}
 
-    /* Panel */
-    .wrap{position:relative; z-index:1; display:grid; place-items:center; min-height:calc(100svh - 24px)}
-    .card{width:min(1120px,100%); background:rgba(255,255,255,.22); backdrop-filter: blur(12px) saturate(170%);
-          border:1px solid var(--line); border-radius:18px; box-shadow:0 18px 46px rgba(15,23,42,.22); overflow:hidden}
-    header{display:flex; gap:12px; align-items:center; padding:14px 16px; border-bottom:1px solid var(--line);
-           background:linear-gradient(180deg, rgba(255,255,255,.34), rgba(255,255,255,.18))}
-    .logo{width:30px; height:30px; display:grid; place-items:center; border-radius:10px; color:#fff; font-weight:800;
-          background:conic-gradient(from 120deg, var(--p1), var(--p2))}
-    header h1{font-size:18px; margin:0}
-    .sub{font-size:12px; color:#1f2937}
-    .content{display:grid; gap:14px; padding:14px}
-    @media (min-width:980px){ .content{ grid-template-columns: 1.15fr .85fr; } }
-    .panel{background:rgba(255,255,255,.18); border:1px solid var(--line); border-radius:16px; padding:14px; backdrop-filter: blur(10px)}
-    .hud{display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between; margin-bottom:10px}
-    .stats{display:flex; gap:10px; flex-wrap:wrap}
-    .chip{background:rgba(255,255,255,.55); border:1px solid var(--line); padding:8px 10px; border-radius:999px; font-size:13px; display:flex; gap:8px; align-items:center}
-    .chip b{font-variant-numeric:tabular-nums}
-    .chip.warn{box-shadow:0 0 0 3px #fecacaaa}
-    select{border:1px solid var(--line); background:rgba(255,255,255,.95); padding:8px 10px; border-radius:10px; font-weight:700}
-    .btn{appearance:none; border:0; background:linear-gradient(180deg, var(--p1), var(--p2)); color:#fff; padding:10px 14px; border-radius:12px; font-weight:800; cursor:pointer; box-shadow:0 12px 28px rgba(124,58,237,.45)}
-    .btn:active{transform:translateY(1px) scale(.99)}
-    .toggle{appearance:none; border:1px solid var(--line); background:rgba(255,255,255,.5); padding:8px 10px; border-radius:10px; font-weight:700; cursor:pointer}
+  /* ====== CARD / LAYOUT ====== */
+  .wrap{position:relative; z-index:1; display:grid; place-items:center; min-height:calc(100svh - 24px)}
+  .card{width:min(1120px,100%); background:rgba(255,255,255,.22); backdrop-filter: blur(12px) saturate(170%);
+        border:1px solid var(--line); border-radius:18px; box-shadow:0 18px 46px rgba(15,23,42,.22); overflow:hidden}
+  header{display:flex; gap:12px; align-items:center; padding:14px 16px; border-bottom:1px solid var(--line);
+         background:linear-gradient(180deg, rgba(255,255,255,.34), rgba(255,255,255,.18))}
+  .logo{width:30px; height:30px; display:grid; place-items:center; border-radius:10px; color:#fff; font-weight:800;
+        background:conic-gradient(from 120deg, var(--p1), var(--p2))}
+  header h1{font-size:18px; margin:0}
+  .sub{font-size:12px; color:#1f2937}
+  .content{display:grid; gap:14px; padding:14px}
+  @media (min-width:980px){ .content{ grid-template-columns: 1.15fr .85fr; } }
+  .panel{background:rgba(255,255,255,.18); border:1px solid var(--line); border-radius:16px; padding:14px; backdrop-filter: blur(10px)}
+  .hud{display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between; margin-bottom:10px}
+  .stats{display:flex; gap:10px; flex-wrap:wrap}
+  .chip{background:rgba(255,255,255,.55); border:1px solid var(--line); padding:8px 10px; border-radius:999px; font-size:13px; display:flex; gap:8px; align-items:center}
+  .chip b{font-variant-numeric:tabular-nums}
+  .chip.warn{box-shadow:0 0 0 3px #fecacaaa}
+  select{border:1px solid var(--line); background:rgba(255,255,255,.95); padding:8px 10px; border-radius:10px; font-weight:700}
+  .btn{appearance:none; border:0; background:linear-gradient(180deg, var(--p1), var(--p2)); color:#fff; padding:10px 14px; border-radius:12px; font-weight:800; cursor:pointer; box-shadow:0 12px 28px rgba(124,58,237,.45)}
+  .btn:active{transform:translateY(1px) scale(.99)}
+  .toggle{appearance:none; border:1px solid var(--line); background:rgba(255,255,255,.5); padding:8px 10px; border-radius:10px; font-weight:700; cursor:pointer}
 
-    /* Board */
-    .board-wrap{position:relative; display:grid; place-items:center}
-    .board{
-      width:100%; max-width:100%; block-size:min(72svh, 76vw); aspect-ratio:1/1;
-      background: transparent; border-radius:14px; display:grid; gap:8px; padding:10px; overflow:hidden;
-      border:1px solid rgba(255,255,255,.45);
-      box-shadow: inset 0 0 0 2px rgba(255,255,255,.18), 0 18px 36px rgba(0,0,0,.12);
-    }
-    .cell{
-      display:grid; place-items:center; background:#fff; border:1px solid #e5e7eb; border-radius:12px;
-      font-weight:900; color:#0f172a;
-      font-size: clamp(16px, 3vmin, 28px);
-      user-select:none; cursor:pointer; transition: transform .08s ease, box-shadow .12s ease, background .12s ease;
-      box-shadow:0 8px 16px rgba(15,23,42,.12)
-    }
-    .cell:hover{ box-shadow:0 14px 24px rgba(15,23,42,.18) }
-    .cell.correct{ background:#ecfdf5; border-color:#bbf7d0 }
-    .cell.wrong{ background:#fef2f2; border-color:#fecaca }
-    .shake{ animation:shake .28s linear }
-    @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
-  </style>
+  /* ====== BOARD (10x10, 1–100) ====== */
+  .board-wrap{position:relative; display:grid; place-items:center}
+  .board{
+    width:100%; max-width:100%; block-size:min(72svh, 76vw); aspect-ratio:1/1;
+    background: transparent; border-radius:14px; display:grid; gap:4px; padding:8px; overflow:hidden;
+    border:1px solid rgba(255,255,255,.45);
+    box-shadow: inset 0 0 0 2px rgba(255,255,255,.18), 0 18px 36px rgba(0,0,0,.12);
+    animation: boardGlow 3.5s ease-in-out infinite;
+  }
+  @keyframes boardGlow{0%,100%{box-shadow: inset 0 0 0 2px rgba(255,255,255,.18), 0 18px 36px rgba(0,0,0,.12)}50%{box-shadow: inset 0 0 0 2px rgba(255,255,255,.5), 0 26px 60px rgba(0,0,0,.2)}}
+  .cell{
+    display:grid; place-items:center; background:#fff; border:1px solid #e5e7eb; border-radius:10px; font-weight:900;
+    font-size: clamp(12px, 2.4cqi, 18px); user-select:none; cursor:pointer; transition: transform .08s ease, box-shadow .12s ease, background .12s ease;
+    box-shadow:0 6px 12px rgba(15,23,42,.12); padding:4px 0;
+  }
+  .cell:hover{ box-shadow:0 10px 18px rgba(15,23,42,.18) }
+  .cell.correct{ background:#ecfdf5; border-color:#bbf7d0 }
+  .cell.wrong{ background:#fef2f2; border-color:#fecaca }
+  .shake{ animation:shake .28s linear }
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
+  /* ====== FX DI DEPAN BOARD (BURUNG/KITE/SHOOTING STAR) ====== */
+  .fx-front{ position:absolute; inset:0; z-index:5; pointer-events:none; overflow:hidden; }
+  .bird{
+    position:absolute; width:34px; height:24px; animation:birdFly var(--bd,9s) linear forwards; opacity:.95;
+    background: radial-gradient(circle at 50% 40%, #222 45%, transparent 46%) no-repeat center/100% 100%;
+  }
+  .bird:before,.bird:after{
+    content:""; position:absolute; width:18px; height:12px; background:#222; border-radius:12px 12px 0 12px;
+    top:6px; left:2px; transform-origin:left bottom; animation:wing .35s ease-in-out infinite;
+  }
+  .bird:after{ left:auto; right:2px; border-radius:12px 12px 12px 0; transform-origin:right bottom; }
+  @keyframes wing{0%,100%{transform:rotate(8deg)}50%{transform:rotate(-24deg)}}
+  @keyframes birdFly{from{transform:translateX(-15vw)} to{transform:translateX(115vw)}}
+
+  .kite{
+    position:absolute; width:18px; height:18px; border:2px solid #ef4444; transform:rotate(45deg);
+    background:linear-gradient(45deg,#fca5a5,#fde68a); box-shadow:0 8px 14px rgba(0,0,0,.16);
+    animation:kiteMove var(--kd,12s) ease-in-out forwards;
+  }
+  .kite:after{content:""; position:absolute; left:50%; top:100%; width:2px; height:60px; background:#475569; transform:translateX(-50%);}
+  @keyframes kiteMove{
+    0%{transform:translate(-10vw,10vh) rotate(45deg)}
+    25%{transform:translate(20vw,0vh) rotate(50deg)}
+    50%{transform:translate(50vw,12vh) rotate(40deg)}
+    75%{transform:translate(80vw,-6vh) rotate(55deg)}
+    100%{transform:translate(110vw,8vh) rotate(45deg)}
+  }
+
+  .shoot{
+    position:absolute; width:120px; height:3px; background:linear-gradient(90deg,#ffffffee,transparent);
+    filter:blur(.4px); opacity:.95; transform:rotate(-20deg);
+    animation:shoot 1.1s linear forwards;
+  }
+  @keyframes shoot{from{transform:translate(100vw,-10vh) rotate(-20deg)} to{transform:translate(-20vw,60vh) rotate(-20deg)}}
+
+  /* ====== SIDE ====== */
+  .title{font-weight:800; margin:0 0 6px}
+  .sidebar p{margin:6px 0; color:#1f2937; font-size:14px}
+  .list{display:grid; gap:8px}
+  .row{display:flex; justify-content:space-between; align-items:center; padding:8px 10px; border:1px dashed var(--line); border-radius:10px; background:rgba(255,255,255,.25)}
+  .tag{font-size:12px; padding:4px 8px; border-radius:999px; background:#eef2ff; color:#4338ca; border:1px solid #e0e7ff}
+
+  /* ====== TOAST & CONFETTI ====== */
+  .toast{position:fixed; left:50%; bottom:18px; transform:translateX(-50%) translateY(60px); opacity:0; background:#111827; color:#fff; padding:10px 14px; border-radius:12px; box-shadow:0 10px 24px rgba(0,0,0,.2); z-index:20; transition: transform .25s ease, opacity .25s ease; font-size:14px}
+  .toast.show{transform:translateX(-50%) translateY(0); opacity:1}
+  .confetti{position:fixed; top:-10px; width:9px; height:14px; border-radius:2px; opacity:.95; pointer-events:none; z-index:15; animation:fall var(--t,2.6s) linear forwards}
+  @keyframes fall{to{transform:translate3d(var(--x,0), 110svh, 0) rotate(720deg)}}
+</style>
 </head>
 <body>
   <div class="bg-back" aria-hidden="true" id="bg"><div class="sun"></div></div>
@@ -94,11 +143,11 @@
             <div class="stats">
               <div class="chip">Level:
                 <select id="level">
-                  <option value="1">1 • 1–20 • 25s</option>
-                  <option value="2">2 • 1–30 • 35s</option>
-                  <option value="3">3 • 1–40 • 45s</option>
-                  <option value="4">4 • 1–50 • 55s</option>
-                  <option value="5">5 • 1–60 • 65s</option>
+                  <option value="1">1 • 1–100 • 25s</option>
+                  <option value="2">2 • 1–100 • 35s</option>
+                  <option value="3">3 • 1–100 • 45s</option>
+                  <option value="4">4 • 1–100 • 55s</option>
+                  <option value="5">5 • 1–100 • 65s</option>
                 </select>
               </div>
               <div class="chip">Target: <b id="target">1</b></div>
@@ -134,198 +183,191 @@
 
   <div class="toast" id="toast">Rekor baru! 🎉</div>
 
-  <!-- MUSIK LATAR -->
+  <!-- MUSIK LATAR (ganti file mp3 sendiri kalau mau) -->
   <audio id="bgm" loop src="happy_bgm.mp3" preload="auto"></audio>
 
 <script>
-(() => {
-  const $ = (s, o = document) => o.querySelector(s);
-  const rand = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
-  const shuffle = (a) => {
-    for (let i = a.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [a[i], a[j]] = [a[j], a[i]];
-    }
-    return a;
+(()=> {
+  /* ====== UTIL ====== */
+  const $=(s,o=document)=>o.querySelector(s);
+  const rand=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+  const shuffle=(a)=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+
+  /* ====== ELEM ====== */
+  const levelSel=$('#level'), targetEl=$('#target'), timeEl=$('#time'), bestEl=$('#best'),
+        chipTime=$('#chipTime'), board=$('#board'), btn=$('#btnStart'),
+        toast=$('#toast'), comboEl=$('#combo'), stormBtn=$('#toggleStorm'),
+        musicBtn=$('#toggleMusic'), bgm=$('#bgm'), BG=$('#bg'), FX=$('#fxFront');
+
+  /* ====== KONFIG LEVEL (TETAP 1–100, GRID 10×10) ====== */
+  const levels={
+    1:{max:100, cols:10, rows:10, time:25},
+    2:{max:100, cols:10, rows:10, time:35},
+    3:{max:100, cols:10, rows:10, time:45},
+    4:{max:100, cols:10, rows:10, time:55},
+    5:{max:100, cols:10, rows:10, time:65}
   };
 
-  const levelSel = $('#level'),
-        targetEl = $('#target'),
-        timeEl = $('#time'),
-        bestEl = $('#best'),
-        comboEl = $('#combo'),
-        board = $('#board'),
-        btn = $('#btnStart'),
-        toast = $('#toast'),
-        stormBtn = $('#toggleStorm'),
-        musicBtn = $('#toggleMusic'),
-        bgm = $('#bgm');
+  /* ====== STATE ====== */
+  let seq=1, maxN=100, started=false, deadline=0, ticker=null, remaining=0;
+  let lastHit=0, combo=0, storm=false;
+  const audioCtx='AudioContext' in window ? new AudioContext() : null;
 
-  const BG = $('#bg');
-  const FX = $('#fxFront');
-
-  const levels = {
-    1: { max: 20, cols: 5, rows: 4, time: 25 },
-    2: { max: 30, cols: 6, rows: 5, time: 35 },
-    3: { max: 40, cols: 7, rows: 6, time: 45 },
-    4: { max: 50, cols: 8, rows: 7, time: 55 },
-    5: { max: 60, cols: 8, rows: 8, time: 65 }
-  };
-
-  let seq = 1,
-      maxN = 20,
-      started = false,
-      deadline = 0,
-      ticker = null,
-      remaining = 0;
-  let lastHit = 0, combo = 0, storm = false;
-
-  function buildBackSky() {
-    BG.innerHTML = '<div class="sun"></div>';
-    for (let i = 0; i < 8; i++) {
-      const c = document.createElement('div');
-      c.className = 'bg-cloud';
-      const sz = rand(100, 200);
-      c.style.width = sz + 'px';
-      c.style.height = sz * 0.45 + 'px';
-      c.style.top = rand(8, 70) + 'vh';
-      c.style.left = rand(-140, -40) + '%';
-      c.style.setProperty('--t', rand(70, 100) + 's');
+  /* ====== BACKGROUND (AWAN + MATAHARI) ====== */
+  function buildBackSky(){
+    BG.innerHTML='<div class="sun"></div>';
+    for(let i=0;i<8;i++){
+      const c=document.createElement('div');
+      c.className='bg-cloud';
+      const sz=rand(100,200); c.style.width=sz+'px'; c.style.height=sz*.45+'px';
+      c.style.top=rand(8,70)+'vh'; c.style.left=rand(-140,-40)+'%';
+      c.style.setProperty('--t', rand(70,100)+'s');
       BG.appendChild(c);
     }
   }
 
-  function spawnBird(leftToRight = true) {
-    const b = document.createElement('div');
-    b.className = 'bird';
-    b.style.top = rand(8, 85) + '%';
-    b.style.setProperty('--bd', (storm ? 6 : 9) + 's');
-    if (!leftToRight) {
-      b.style.transform = 'scaleX(-1)';
-      b.style.animation = 'birdFly var(--bd) linear reverse forwards';
-      b.style.left = '115vw';
-    }
-    FX.appendChild(b);
-    b.addEventListener('animationend', () => b.remove());
+  /* ====== FX DEPAN BOARD (BURUNG / LAYANGAN / BINTANG JATUH) ====== */
+  function spawnBird(leftToRight=true){
+    const b=document.createElement('div'); b.className='bird';
+    b.style.top=rand(8,85)+'%'; b.style.setProperty('--bd', (storm?6:9)+'s');
+    if(!leftToRight){ b.style.transform='scaleX(-1)'; b.style.animation='birdFly var(--bd) linear reverse forwards'; b.style.left='115vw'; }
+    FX.appendChild(b); b.addEventListener('animationend',()=>b.remove());
   }
-
-  function spawnKite() {
-    const k = document.createElement('div');
-    k.className = 'kite';
-    k.style.setProperty('--kd', (storm ? 9 : 12) + 's');
-    FX.appendChild(k);
-    k.addEventListener('animationend', () => k.remove());
+  function spawnKite(){
+    const k=document.createElement('div'); k.className='kite';
+    k.style.setProperty('--kd', (storm?9:12)+'s'); FX.appendChild(k);
+    k.addEventListener('animationend',()=>k.remove());
   }
-
-  function spawnShoot() {
-    const s = document.createElement('div');
-    s.className = 'shoot';
-    FX.appendChild(s);
-    s.addEventListener('animationend', () => s.remove());
-  }
-
+  function spawnShoot(){ const s=document.createElement('div'); s.className='shoot'; FX.appendChild(s); s.addEventListener('animationend',()=>s.remove()); }
   let ivBird, ivKite, ivShoot;
-  function startFX() {
+  function startFX(){
     stopFX();
-    ivBird = setInterval(() => spawnBird(Math.random() > 0.5), storm ? 1400 : 2400);
-    ivKite = setInterval(spawnKite, storm ? 2800 : 4600);
-    ivShoot = setInterval(spawnShoot, storm ? 2800 : 5200);
+    ivBird =setInterval(()=>spawnBird(Math.random()>.5), storm? 1400:2400);
+    ivKite =setInterval(spawnKite,                         storm? 2800:4600);
+    ivShoot=setInterval(spawnShoot,                        storm? 2800:5200);
   }
+  function stopFX(){ [ivBird,ivKite,ivShoot].forEach(x=>x&&clearInterval(x)); }
 
-  function stopFX() {
-    [ivBird, ivKite, ivShoot].forEach(x => x && clearInterval(x));
-  }
-
-  function buildGrid(cfg) {
-    const { max, cols, rows, time } = cfg;
-    maxN = max;
-    seq = 1;
-    targetEl.textContent = '1';
-    combo = 0;
-    comboEl.textContent = '0';
-    board.classList.remove('shake');
-    board.innerHTML = '';
-    board.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
-    board.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
-    const arr = shuffle(Array.from({ length: max }, (_, i) => i + 1));
-    arr.forEach(n => {
-      const c = document.createElement('button');
-      c.type = 'button';
-      c.className = 'cell';
-      c.textContent = n;
-      c.setAttribute('aria-label', 'angka ' + n);
-      c.addEventListener('click', () => onClick(c, n));
+  /* ====== GRID ====== */
+  function buildGrid(cfg){
+    const {max, cols, rows, time}=cfg;
+    maxN=max; seq=1; targetEl.textContent='1'; combo=0; comboEl.textContent='0';
+    board.classList.remove('shake'); board.innerHTML='';
+    board.style.gridTemplateColumns=`repeat(${cols}, 1fr)`; board.style.gridTemplateRows=`repeat(${rows}, 1fr)`;
+    const arr=shuffle(Array.from({length:max},(_,i)=>i+1));
+    arr.forEach(n=>{
+      const c=document.createElement('button');
+      c.type='button'; c.className='cell'; c.textContent=n; c.setAttribute('aria-label','angka '+n);
+      c.addEventListener('click',()=>onClick(c,n));
       board.appendChild(c);
     });
-    remaining = time;
-    timeEl.textContent = remaining.toFixed(3);
+    remaining=time; timeEl.textContent=remaining.toFixed(3);
     stopTicker(true);
   }
 
-  function startTicker() {
-    started = true;
-    deadline = performance.now() + remaining * 1000;
-    ticker = setInterval(() => {
-      remaining = (deadline - performance.now()) / 1000;
-      if (remaining < 0) remaining = 0;
-      timeEl.textContent = remaining.toFixed(3);
-      if (remaining === 0) {
-        stopTicker();
-        gameOver();
-      }
+  /* ====== TIMER ====== */
+  function startTicker(){
+    started=true; deadline=performance.now()+remaining*1000;
+    ticker=setInterval(()=>{
+      remaining=(deadline-performance.now())/1000; if(remaining<0) remaining=0;
+      timeEl.textContent=remaining.toFixed(3);
+      if(remaining===0){ stopTicker(); gameOver(); }
     }, 25);
   }
+  function stopTicker(reset=false){ if(ticker){clearInterval(ticker); ticker=null} if(reset) started=false }
 
-  function stopTicker(reset = false) {
-    if (ticker) { clearInterval(ticker); ticker = null; }
-    if (reset) started = false;
+  /* ====== AUDIO FX ====== */
+  function pop(ok=true){
+    if(!audioCtx) return;
+    const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+    o.type='triangle'; o.frequency.value=ok?760:210; g.gain.value=.0001;
+    o.connect(g); g.connect(audioCtx.destination); o.start();
+    const t=audioCtx.currentTime; g.gain.exponentialRampToValueAtTime(.26, t+.01); g.gain.exponentialRampToValueAtTime(.0001, t+.1); o.stop(t+.12);
   }
 
-  function pop(ok = true) {
-    if (!audioCtx) return;
-    const o = audioCtx.createOscillator(),
-          g = audioCtx.createGain();
-    o.type = 'triangle';
-    o.frequency.value = ok ? 760 : 210;
-    g.gain.value = .0001;
-    o.connect(g);
-    g.connect(audioCtx.destination);
-    o.start();
-    const t = audioCtx.currentTime;
-    g.gain.exponentialRampToValueAtTime(.26, t + .01);
-    g.gain.exponentialRampToValueAtTime(.0001, t + .1);
-    o.stop(t + .12);
-  }
-
-  function gameOver() {
-    toast.textContent = 'Game Over! ⏰';
-    toast.classList.add('show');
-    setTimeout(() => toast.classList.remove('show'), 1800);
-    board.querySelectorAll('.cell').forEach(c => c.disabled = true);
-  }
-
-  function onClick(cell, n) {
-    if (!started) {
-      startTicker();
+  /* ====== UI HELPERS ====== */
+  function confetti(n=160){
+    for(let i=0;i<n;i++){
+      const e=document.createElement('div'); e.className='confetti';
+      e.style.left=(50+(Math.random()*60-30))+'vw';
+      e.style.background=`hsl(${Math.random()*360}, 90%, 60%)`;
+      e.style.setProperty('--x', (Math.random()*100 - 50)+'vw');
+      e.style.setProperty('--t', (2+Math.random()*1.8)+'s');
+      document.body.appendChild(e); e.addEventListener('animationend', ()=>e.remove());
     }
-    if (n === seq) {
-      cell.classList.add('correct');
-      cell.disabled = true;
-      seq++;
-      targetEl.textContent = seq <= maxN ? seq : '✔';
-      pop(true);
-      if (seq > maxN) {
+  }
+  function toastMsg(t){ toast.textContent=t; toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'), 1800) }
+
+  /* ====== BEST TIME ====== */
+  const key=(lvl)=>`nr_best_${lvl}`;
+  const loadBest=(lvl)=>{const v=localStorage.getItem(key(lvl)); return v?parseFloat(v):null};
+  const saveBest=(lvl,val)=>{const b=loadBest(lvl); if(b==null||val<b){localStorage.setItem(key(lvl), String(val.toFixed(3))); return true} return false};
+  const renderBest=(lvl)=>{const b=loadBest(lvl); bestEl.textContent=b?`${b.toFixed(3)}s`:'—'};
+
+  /* ====== TIME MODIFIERS ====== */
+  function penalize(sec){ remaining=Math.max(0, remaining-sec); deadline=Math.max(performance.now(), deadline-sec*1000); chipTime.classList.add('warn'); setTimeout(()=>chipTime.classList.remove('warn'), 300); }
+  function addTime(sec){ remaining+=sec; deadline+=sec*1000; toastMsg(`Bonus +${sec}s ⏱️`); }
+
+  /* ====== GAME LOGIC (FIX KLIKAN ANGKA) ====== */
+  function onClick(cell,n){
+    // Mulai timer + musik saat klik pertama
+    if(!started){
+      audioCtx?.resume?.();
+      startTicker();
+      try{ if(musicBtn.dataset.off!=='1'){ bgm.volume=0.3; bgm.play(); } }catch{}
+      lastHit=performance.now();
+    }
+
+    if(n===seq){
+      cell.classList.add('correct'); cell.disabled=true; seq++; targetEl.textContent= seq<=maxN? String(seq) : '✔'; pop(true);
+
+      // Combo cepat (<=900ms antar klik) -> bonus waktu
+      const now=performance.now(); if(now-lastHit<=900){ combo++; } else { combo=1; } lastHit=now;
+      if(combo>=5){ addTime(3); combo=0; } comboEl.textContent=String(Math.min(combo,5));
+
+      // Selesai?
+      if(seq>maxN){
         stopTicker();
-        gameOver();
+        const lvl=parseInt(levelSel.value,10); const used=levels[lvl].time - remaining;
+        const isBest=saveBest(lvl, used); renderBest(lvl);
+        confetti(180); toastMsg(isBest?'Rekor baru! 🎉':'Selesai! ✅');
+        board.querySelectorAll('.cell').forEach(c=>c.disabled=true);
       }
     } else {
-      cell.classList.add('wrong');
-      setTimeout(() => cell.classList.remove('wrong'), 300);
-      pop(false);
-      penalize(2);
+      // Salah klik -> penalti dan anim shake
+      pop(false); board.classList.remove('shake'); void board.offsetWidth; board.classList.add('shake');
+      cell.classList.add('wrong'); setTimeout(()=>cell.classList.remove('wrong'),220);
+      penalize(2); if(remaining===0){ stopTicker(); gameOver(); }
     }
   }
+
+  function gameOver(){ toastMsg('Waktu habis! ⏰'); board.querySelectorAll('.cell').forEach(c=>c.disabled=true); }
+
+  /* ====== START / EVENT ====== */
+  function start(){
+    const lvl=parseInt(levelSel.value,10), cfg=levels[lvl];
+    buildBackSky(); buildGrid(cfg); renderBest(lvl); startFX();
+    // Auto play musik jika ON
+    try{ if(musicBtn.dataset.off!=='1'){ bgm.volume=0.3; bgm.play(); } }catch{}
+  }
+
+  // Toggle music
+  musicBtn.addEventListener('click', ()=>{
+    if(bgm.paused){ bgm.volume=0.3; bgm.play().catch(()=>{}); musicBtn.textContent='Music: ON'; musicBtn.dataset.off='0'; }
+    else { bgm.pause(); bgm.currentTime=0; musicBtn.textContent='Music: OFF'; musicBtn.dataset.off='1'; }
+  });
+
+  // Toggle storm (lebih banyak efek)
+  stormBtn.addEventListener('click', ()=>{ storm=!storm; stormBtn.textContent=`Storm: ${storm?'ON':'OFF'}`; startFX(); });
+
+  btn.addEventListener('click', start);
+  levelSel.addEventListener('change', start);
+
+  // INIT
+  buildBackSky(); buildGrid(levels[1]); renderBest(1); startFX();
 })();
 </script>
+
+<!-- Catatan: ganti happy_bgm.mp3 dengan file kamu sendiri -->
 </body>
 </html>
